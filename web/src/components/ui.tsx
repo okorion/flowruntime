@@ -1,3 +1,4 @@
+import { statusLabel } from "../labels";
 import type { CSSProperties, ReactNode } from "react";
 import type { Handle } from "../types";
 
@@ -183,7 +184,7 @@ export function Badge({
   return (
     <span className={`badge badge-${tone}`}>
       <span className="badge-dot" />
-      {children}
+      {typeof children === "string" ? statusLabel(children) : children}
     </span>
   );
 }
@@ -271,7 +272,7 @@ export function Sparkline({
       viewBox={`0 0 500 ${height}`}
       preserveAspectRatio="none"
       role="img"
-      aria-label={`Measured values: ${values.join(", ")}`}
+      aria-label={`측정값: ${values.join(", ")}`}
     >
       {[0.25, 0.5, 0.75].map((n) => (
         <line

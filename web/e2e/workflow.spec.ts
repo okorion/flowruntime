@@ -20,32 +20,29 @@ async function openApp(page: Page) {
   await page.goto("./");
   await expect(page).toHaveTitle("FlowRuntime — Local-first Workflow Engine");
   await expect(
-    page.getByRole("button", { name: "Run workflow", exact: true }),
+    page.getByRole("button", { name: "실행하기", exact: true }),
   ).toBeEnabled();
   await expect(page.getByTestId("workflow-canvas")).toBeVisible();
+  await page.locator(".advanced-controls > summary").click();
 }
 
 async function pause(page: Page) {
   const button = page.getByRole("button", {
-    name: "Pause execution",
+    name: "일시 정지",
     exact: true,
   });
   if (await button.isVisible()) await button.click();
   await expect(
-    page.getByRole("button", { name: "Resume execution", exact: true }),
+    page.getByRole("button", { name: "계속 실행", exact: true }),
   ).toBeVisible();
 }
 
 async function monitor(page: Page) {
-  await page
-    .getByRole("button", { name: "Execution Monitor", exact: true })
-    .click();
+  await page.getByRole("button", { name: "실행 결과", exact: true }).click();
 }
 
 async function developerTools(page: Page) {
-  await page
-    .getByRole("button", { name: "Developer Tools", exact: true })
-    .click();
+  await page.getByRole("button", { name: "개발자 도구", exact: true }).click();
 }
 
 test("edits a real condition, runs both branches, and persists the definition", async ({
@@ -56,57 +53,65 @@ test("edits a real condition, runs both branches, and persists the definition", 
     page.getByTestId("workflow-canvas").locator(".react-flow__node"),
   ).toHaveCount(7);
   await page
-    .getByRole("textbox", { name: "Node configuration JSON" })
-    .fill(JSON.stringify({ field: "amount", operator: "gte", value: 2000 }));
-  await page
-    .getByRole("button", { name: "Apply configuration", exact: true })
+    .getByTestId("workflow-canvas")
+    .locator('.react-flow__node[data-id="check-amount"]')
     .click();
-  await page.getByRole("button", { name: "Validate", exact: true }).click();
-  await expect(
-    page.getByText("Ready to execute", { exact: true }),
-  ).toBeVisible();
+  await page
+    .getByRole("textbox", { name: "노드 설정 JSON" })
+    .fill(JSON.stringify({ field: "amount", operator: "gte", value: 2000 }));
+  await page.getByRole("button", { name: "설정 적용", exact: true }).click();
+  await page.getByRole("button", { name: "검증하기", exact: true }).click();
+  await expect(page.getByText("실행 가능", { exact: true })).toBeVisible();
   await pause(page);
-  await page.getByRole("button", { name: "Run workflow", exact: true }).click();
+  await page.getByRole("button", { name: "실행하기", exact: true }).click();
   await page.getByRole("button", { name: "Step +100 ms", exact: true }).click();
   await monitor(page);
   await expect(page.getByTestId("run-result")).toContainText("approved");
-  await expect(page.getByTestId("task-timeline")).toContainText("Auto approve");
+  await expect(page.getByTestId("task-timeline")).toContainText(
+    "자동 승인으로 분류",
+  );
   await expect(page.getByTestId("task-timeline")).not.toContainText(
-    "Manual review",
+    "수동 검토로 분류",
   );
   await page
-    .getByRole("button", { name: "Workflow snapshot", exact: true })
+    .getByRole("button", { name: "실행한 Workflow", exact: true })
     .click();
   await expect(
-    page.getByText("The definition captured when this run started.", {
+    page.getByText("이 Run이 시작될 때의 정의입니다.", {
       exact: false,
     }),
   ).toBeVisible();
   await page
-    .getByRole("button", { name: "Workflow Studio", exact: true })
+    .getByRole("button", { name: "Workflow 편집", exact: true })
     .click();
   await page
-    .getByRole("textbox", { name: "Event input JSON" })
+    .getByRole("textbox", { name: "입력 데이터 JSON" })
     .fill(JSON.stringify({ amount: 2500, order_id: "TEST-HIGH" }));
-  await page.getByRole("button", { name: "Run workflow", exact: true }).click();
+  await page.getByRole("button", { name: "실행하기", exact: true }).click();
   await page.getByRole("button", { name: "Step +100 ms", exact: true }).click();
   await monitor(page);
   await expect(page.getByTestId("run-result")).toContainText("manual_review");
   await expect(page.getByTestId("task-timeline")).toContainText(
-    "Manual review",
+    "수동 검토로 분류",
   );
+  await page.getByRole("button", { name: "실행 초기화", exact: true }).click();
   await page
-    .getByRole("button", { name: "Reset runtime", exact: true })
+    .getByRole("button", { name: "Workflow 편집", exact: true })
     .click();
   await page
-    .getByRole("button", { name: "Workflow Studio", exact: true })
+    .getByTestId("workflow-canvas")
+    .locator('.react-flow__node[data-id="check-amount"]')
     .click();
   await expect(
-    page.getByRole("textbox", { name: "Node configuration JSON" }),
+    page.getByRole("textbox", { name: "노드 설정 JSON" }),
   ).toHaveValue(/2000/);
   await page.reload();
+  await page
+    .getByTestId("workflow-canvas")
+    .locator('.react-flow__node[data-id="check-amount"]')
+    .click();
   await expect(
-    page.getByRole("textbox", { name: "Node configuration JSON" }),
+    page.getByRole("textbox", { name: "노드 설정 JSON" }),
   ).toHaveValue(/2000/);
   await developerTools(page);
   await page.getByRole("tab", { name: "Heap", exact: true }).click();
@@ -117,44 +122,36 @@ test("a paused delay survives collection and completes after virtual time advanc
   page,
 }) => {
   await openApp(page);
-  await page
-    .getByRole("button", { name: "Incident Triage", exact: true })
-    .click();
+  await page.getByRole("button", { name: "장애 분류", exact: true }).click();
   await pause(page);
-  await page.getByRole("button", { name: "Run workflow", exact: true }).click();
+  await page.getByRole("button", { name: "실행하기", exact: true }).click();
   await page.getByRole("button", { name: "Step +100 ms", exact: true }).click();
   await monitor(page);
-  await expect(page.getByTestId("task-timeline")).toContainText(
-    "Escalation window",
-  );
+  await expect(page.getByTestId("task-timeline")).toContainText("보고 전 대기");
   await expect(
-    page.getByText("A continuation is waiting in the scheduler.", {
+    page.getByText("Continuation이 스케줄러에서 대기 중입니다.", {
       exact: false,
     }),
   ).toBeVisible();
   await expect(page.getByTestId("run-result")).toContainText("null");
   await developerTools(page);
-  await page
-    .getByRole("button", { name: "Collect garbage", exact: true })
-    .click();
+  await page.getByRole("button", { name: "GC 실행", exact: true }).click();
   await expect(page.getByTestId("live-objects")).not.toHaveText("0");
   await monitor(page);
   await expect(
-    page.getByText("A continuation is waiting in the scheduler.", {
+    page.getByText("Continuation이 스케줄러에서 대기 중입니다.", {
       exact: false,
     }),
   ).toBeVisible();
   await developerTools(page);
   await page
-    .getByRole("button", { name: "Advance 5 seconds", exact: true })
+    .getByRole("button", { name: "가상 시간 +5초", exact: true })
     .click();
   await monitor(page);
   await expect(page.getByTestId("run-result")).toContainText("on-call");
-  await expect(page.getByTestId("task-timeline")).toContainText(
-    "Escalated incident",
-  );
+  await expect(page.getByTestId("task-timeline")).toContainText("보고 결과");
   await expect(
-    page.getByRole("button", { name: "Resume execution", exact: true }),
+    page.getByRole("button", { name: "계속 실행", exact: true }),
   ).toBeVisible();
 });
 
@@ -163,17 +160,23 @@ test("pin protects a cyclic runtime graph, unpin permits collection, and new run
 }) => {
   await openApp(page);
   await pause(page);
-  await page.getByRole("button", { name: "Run workflow", exact: true }).click();
+  await page.getByRole("button", { name: "실행하기", exact: true }).click();
   await page.getByRole("button", { name: "Step +100 ms", exact: true }).click();
   await monitor(page);
   await expect(page.getByTestId("run-result")).toContainText("manual_review");
-  await page.getByRole("button", { name: "Pin run", exact: true }).click();
-  await expect(page.getByText("Pinned root", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Trace run", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Run 보존 (Pin)", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Run 보존 해제", exact: true }),
+  ).toBeEnabled();
+  await page
+    .getByRole("button", { name: "객체 참조 보기", exact: true })
+    .click();
   await expect(page.getByTestId("handle-inspection")).toBeVisible();
   await expect(page.getByTestId("handle-inspection")).toContainText("Run");
   const runHandle = await page
-    .getByRole("textbox", { name: "Handle to inspect" })
+    .getByRole("textbox", { name: "조회할 Handle" })
     .inputValue();
   const graph = page.getByTestId("reference-graph");
   const taskNode = graph
@@ -190,38 +193,38 @@ test("pin protects a cyclic runtime graph, unpin permits collection, and new run
     graph.locator(`.react-flow__edge[data-id^="${taskHandle}-${runHandle}-"]`),
   ).toHaveCount(1);
   await page
-    .getByRole("button", { name: "Advance 5 seconds", exact: true })
+    .getByRole("button", { name: "가상 시간 +5초", exact: true })
     .click();
   await page
-    .getByRole("button", { name: "Advance 5 seconds", exact: true })
+    .getByRole("button", { name: "가상 시간 +5초", exact: true })
     .click();
-  await page
-    .getByRole("button", { name: "Collect garbage", exact: true })
-    .click();
+  await page.getByRole("button", { name: "GC 실행", exact: true }).click();
   await expect(page.getByTestId("handle-inspection")).toContainText(
-    "Valid handle",
+    "유효한 Handle",
   );
   await monitor(page);
   await expect(
-    page.getByRole("button", { name: "Unpin run", exact: true }),
+    page.getByRole("button", { name: "Run 보존 해제", exact: true }),
   ).toBeEnabled();
-  await page.getByRole("button", { name: "Unpin run", exact: true }).click();
-  await page.getByRole("button", { name: "Trace run", exact: true }).click();
   await page
-    .getByRole("button", { name: "Collect garbage", exact: true })
+    .getByRole("button", { name: "Run 보존 해제", exact: true })
     .click();
+  await page
+    .getByRole("button", { name: "객체 참조 보기", exact: true })
+    .click();
+  await page.getByRole("button", { name: "GC 실행", exact: true }).click();
   await expect(page.getByTestId("handle-inspection")).toContainText(
-    /stale|collected|invalid/i,
+    /회수|유효하지/,
   );
   await expect(page.getByTestId("reference-graph")).toContainText(
-    "No live graph for this run",
+    "이 Run의 객체가 남아 있지 않습니다",
   );
   await page.getByRole("tab", { name: "Heap", exact: true }).click();
   await expect(page.getByTestId("live-objects")).toHaveText("0");
   await page
-    .getByRole("button", { name: "Workflow Studio", exact: true })
+    .getByRole("button", { name: "Workflow 편집", exact: true })
     .click();
-  await page.getByRole("button", { name: "Run workflow", exact: true }).click();
+  await page.getByRole("button", { name: "실행하기", exact: true }).click();
   await page.getByRole("button", { name: "Step +100 ms", exact: true }).click();
   await developerTools(page);
   await page.getByRole("tab", { name: "Heap", exact: true }).click();
@@ -229,7 +232,7 @@ test("pin protects a cyclic runtime graph, unpin permits collection, and new run
   await expect(page.getByTestId("live-objects")).not.toHaveText("0");
   const reused = page
     .locator(".metric")
-    .filter({ has: page.getByText("Slot reuses", { exact: true }) })
+    .filter({ has: page.getByText("슬롯 재사용 횟수", { exact: true }) })
     .locator("strong");
   await expect(reused).not.toHaveText("0");
 });
@@ -238,39 +241,36 @@ test("rejects an invalid graph and reports an intentional transform failure", as
   page,
 }) => {
   await openApp(page);
+  await page.locator(".node-library-section > summary").click();
   await page
-    .getByRole("button", { name: "Add Transform node", exact: true })
+    .getByRole("button", { name: "Transform 노드 추가", exact: true })
     .click();
-  await page.getByRole("button", { name: "Validate", exact: true }).click();
+  await page.getByRole("button", { name: "검증하기", exact: true }).click();
   await expect(page.locator(".validation-errors")).toContainText(
-    "Workflow needs attention",
+    "다음 항목을 수정한 뒤 실행하세요",
   );
   await page
-    .getByRole("button", { name: "Delete selected node", exact: true })
+    .getByRole("button", { name: "선택한 노드 삭제", exact: true })
     .click();
-  await page.getByRole("button", { name: "Validate", exact: true }).click();
-  await expect(
-    page.getByText("Ready to execute", { exact: true }),
-  ).toBeVisible();
+  await page.getByRole("button", { name: "검증하기", exact: true }).click();
+  await expect(page.getByText("실행 가능", { exact: true })).toBeVisible();
   await page
     .getByTestId("workflow-canvas")
-    .getByText("Validate order", { exact: true })
+    .getByText("검증 상태 추가", { exact: true })
     .click();
   await page
-    .getByRole("textbox", { name: "Node configuration JSON" })
+    .getByRole("textbox", { name: "노드 설정 JSON" })
     .fill(JSON.stringify({ field: "validated", value: true, fail: true }));
-  await page
-    .getByRole("button", { name: "Apply configuration", exact: true })
-    .click();
+  await page.getByRole("button", { name: "설정 적용", exact: true }).click();
   await pause(page);
-  await page.getByRole("button", { name: "Run workflow", exact: true }).click();
+  await page.getByRole("button", { name: "실행하기", exact: true }).click();
   await page.getByRole("button", { name: "Step +100 ms", exact: true }).click();
   await monitor(page);
-  await expect(page.getByRole("alert")).toContainText("Execution failed");
+  await expect(page.getByRole("alert")).toContainText("실행 실패");
   await expect(page.getByTestId("task-timeline")).toContainText(
-    "Validate order",
+    "검증 상태 추가",
   );
-  await expect(page.getByTestId("task-timeline")).toContainText("failed");
+  await expect(page.getByTestId("task-timeline")).toContainText("실패");
   await expect(page.getByTestId("run-result")).toContainText("null");
 });
 
@@ -278,23 +278,21 @@ test("runs a data-processing burst and captures manual collection with auto GC d
   page,
 }) => {
   await openApp(page);
-  await page
-    .getByRole("button", { name: "Data Processing", exact: true })
-    .click();
+  await page.getByRole("button", { name: "데이터 처리", exact: true }).click();
   await pause(page);
   await developerTools(page);
   // The visible toggle wraps a visually hidden native checkbox; exercise its keyboard control.
   await page
-    .getByRole("checkbox", { name: "Auto GC", exact: true })
+    .getByRole("checkbox", { name: "자동 GC", exact: true })
     .press("Space");
   await expect(
-    page.getByRole("checkbox", { name: "Auto GC", exact: true }),
+    page.getByRole("checkbox", { name: "자동 GC", exact: true }),
   ).not.toBeChecked();
-  await page.getByRole("button", { name: "Burst ×20", exact: true }).click();
+  await page.getByRole("button", { name: "20회 실행", exact: true }).click();
   await page.getByRole("button", { name: "Step +100 ms", exact: true }).click();
   await monitor(page);
   await page
-    .getByRole("combobox", { name: "Filter runs", exact: true })
+    .getByRole("combobox", { name: "Run 상태 필터", exact: true })
     .selectOption("completed");
   await expect(page.getByRole("button", { name: /^Run #\d+$/ })).toHaveCount(
     20,
@@ -302,25 +300,19 @@ test("runs a data-processing burst and captures manual collection with auto GC d
   await expect(page.getByTestId("run-result")).toContainText(
     '"processed": true',
   );
-  await expect(page.getByTestId("task-timeline")).toContainText(
-    "Accepted record",
-  );
+  await expect(page.getByTestId("task-timeline")).toContainText("통과 결과");
   await developerTools(page);
   await page
-    .getByRole("button", { name: "Advance 5 seconds", exact: true })
+    .getByRole("button", { name: "가상 시간 +5초", exact: true })
     .click();
   await expect(page.getByTestId("live-objects")).not.toHaveText("0");
   await expect(
-    page.getByRole("checkbox", { name: "Auto GC", exact: true }),
+    page.getByRole("checkbox", { name: "자동 GC", exact: true }),
   ).not.toBeChecked();
-  await page
-    .getByRole("button", { name: "Collect garbage", exact: true })
-    .click();
+  await page.getByRole("button", { name: "GC 실행", exact: true }).click();
   await expect(page.getByTestId("live-objects")).toHaveText("0");
-  await page
-    .getByRole("tab", { name: "Garbage Collection", exact: true })
-    .click();
-  await expect(page.getByTestId("gc-comparison")).toContainText("reclaimed");
+  await page.getByRole("tab", { name: "GC", exact: true }).click();
+  await expect(page.getByTestId("gc-comparison")).toContainText("회수");
   await expect(
     page
       .getByTestId("gc-comparison")
@@ -330,7 +322,7 @@ test("runs a data-processing burst and captures manual collection with auto GC d
   ).toHaveText("0");
   await expect(
     page.getByText(
-      "No roots. Unreachable objects are eligible for the next collection.",
+      "Root가 없습니다. 연결이 끊긴 객체는 다음 GC에서 회수됩니다.",
       { exact: true },
     ),
   ).toBeVisible();
@@ -344,6 +336,7 @@ test("deletes only the selected edge, reconnects its handles, and executes the r
   const selectedEdge = canvas.locator(
     '.react-flow__edge[data-id="new-order-normalize"]',
   );
+  await selectedEdge.scrollIntoViewIfNeeded();
   // Click a point on the rendered SVG curve, accounting for the current canvas transform.
   const midpoint = await selectedEdge
     .locator(".react-flow__edge-interaction")
@@ -360,15 +353,16 @@ test("deletes only the selected edge, reconnects its handles, and executes the r
   await page.keyboard.press("Delete");
   await expect(canvas.locator(".react-flow__node")).toHaveCount(7);
   await expect(canvas.locator(".react-flow__edge")).toHaveCount(5);
-  await page.getByRole("button", { name: "Validate", exact: true }).click();
+  await page.getByRole("button", { name: "검증하기", exact: true }).click();
   await expect(page.locator(".validation-errors")).toContainText(
-    "Workflow needs attention",
+    "다음 항목을 수정한 뒤 실행하세요",
   );
+  await canvas.scrollIntoViewIfNeeded();
   const source = await canvas
-    .getByLabel("Connect from New order", { exact: true })
+    .getByLabel("주문 입력 출력 연결점", { exact: true })
     .boundingBox();
   const target = await canvas
-    .getByLabel("Connect to Validate order", { exact: true })
+    .getByLabel("검증 상태 추가 입력 연결점", { exact: true })
     .boundingBox();
   if (!source || !target)
     throw new Error("Connection handles are not rendered");
@@ -384,12 +378,10 @@ test("deletes only the selected edge, reconnects its handles, and executes the r
   );
   await page.mouse.up();
   await expect(canvas.locator(".react-flow__edge")).toHaveCount(6);
-  await page.getByRole("button", { name: "Validate", exact: true }).click();
-  await expect(
-    page.getByText("Ready to execute", { exact: true }),
-  ).toBeVisible();
+  await page.getByRole("button", { name: "검증하기", exact: true }).click();
+  await expect(page.getByText("실행 가능", { exact: true })).toBeVisible();
   await pause(page);
-  await page.getByRole("button", { name: "Run workflow", exact: true }).click();
+  await page.getByRole("button", { name: "실행하기", exact: true }).click();
   await page.getByRole("button", { name: "Step +100 ms", exact: true }).click();
   await expect(page.getByTestId("run-result")).toContainText("manual_review");
 });
@@ -398,28 +390,27 @@ test("continuous execution remains stoppable after the draft becomes invalid", a
   page,
 }) => {
   await openApp(page);
-  await page.getByRole("button", { name: "Continuous", exact: true }).click();
+  await page.getByRole("button", { name: "반복 실행", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "Stop continuous", exact: true }),
+    page.getByRole("button", { name: "반복 실행 중지", exact: true }),
   ).toBeEnabled();
   await expect(page.locator(".footer-latest")).toBeVisible();
+  await page.locator(".node-library-section > summary").click();
   await page
-    .getByRole("button", { name: "Add Transform node", exact: true })
+    .getByRole("button", { name: "Transform 노드 추가", exact: true })
     .click();
+  await expect(page.getByText("확인 필요", { exact: true })).toBeVisible();
   await expect(
-    page.getByText("Needs attention", { exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Stop continuous", exact: true }),
+    page.getByRole("button", { name: "반복 실행 중지", exact: true }),
   ).toBeEnabled();
   await page
-    .getByRole("button", { name: "Stop continuous", exact: true })
+    .getByRole("button", { name: "반복 실행 중지", exact: true })
     .click();
   await expect(
-    page.getByRole("button", { name: "Continuous", exact: true }),
+    page.getByRole("button", { name: "반복 실행", exact: true }),
   ).toHaveAttribute("aria-pressed", "false");
   await expect(
-    page.getByRole("button", { name: "Continuous", exact: true }),
+    page.getByRole("button", { name: "반복 실행", exact: true }),
   ).toBeDisabled();
 });
 
@@ -439,11 +430,55 @@ test("keeps the studio, execution monitor, and developer tools within a 400 px v
   };
   await expectNoPageOverflow();
   await pause(page);
-  await page.getByRole("button", { name: "Run workflow", exact: true }).click();
+  await page.getByRole("button", { name: "실행하기", exact: true }).click();
   await page.getByRole("button", { name: "Step +100 ms", exact: true }).click();
   await expect(page.getByTestId("run-result")).toContainText("manual_review");
   await expectNoPageOverflow();
   await developerTools(page);
   await expect(page.getByTestId("slot-map")).toBeVisible();
   await expectNoPageOverflow();
+});
+
+test("Korean first-use guidance keeps controls readable and advanced actions collapsed", async ({
+  page,
+}) => {
+  await page.goto("./");
+  await expect(
+    page.getByRole("button", { name: "실행하기", exact: true }),
+  ).toBeEnabled();
+  await expect(page.locator("html")).toHaveAttribute("lang", "ko");
+  await expect(page.locator(".quick-guide")).toContainText("처음이라면");
+  await expect(page.locator(".advanced-controls")).not.toHaveAttribute(
+    "open",
+    "",
+  );
+  await expect(
+    page.getByRole("button", { name: "반복 실행", exact: true }),
+  ).not.toBeVisible();
+  await expect(
+    page.getByRole("textbox", { name: "노드 설정 JSON" }),
+  ).not.toBeVisible();
+  for (const width of [1440, 400]) {
+    await page.setViewportSize({ width, height: 1000 });
+    const sizes = await page
+      .locator(
+        ".workspace-title p, .main-nav button, .run-button, .input-editor",
+      )
+      .evaluateAll((nodes) =>
+        nodes.map((node) => parseFloat(getComputedStyle(node).fontSize)),
+      );
+    expect(Math.min(...sizes)).toBeGreaterThanOrEqual(15);
+    const canvas = await page
+      .locator(".workflow-canvas > .react-flow")
+      .boundingBox();
+    expect(canvas?.height).toBeGreaterThanOrEqual(500);
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(width + 1);
+  }
+  await page.getByRole("button", { name: "실행하기", exact: true }).click();
+  await expect(page.getByTestId("run-result")).toContainText("manual_review");
+  await expect(page.getByTestId("task-timeline")).toContainText(
+    "수동 검토로 분류",
+  );
 });

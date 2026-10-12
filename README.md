@@ -6,18 +6,19 @@ FlowRuntime은 브라우저에서 워크플로우를 편집하고 입력 JSON을
 
 [라이브 데모](https://okorion.github.io/flowruntime/) · [소스](https://github.com/okorion/flowruntime) · [검증과 벤치마크](docs/validation.md) · [의존성 선택](docs/dependencies.md)
 
-![Workflow Studio — 편집하는 그래프가 Rust에 전달되는 실행 정의입니다.](docs/screenshots/workflow-studio.png)
+![Workflow 편집 — 템플릿을 고르고 입력을 실행합니다.](docs/screenshots/ko-workflow-studio.png)
 
 ## 사용하기
 
-1. **Workflow Studio**에서 Order Routing, Incident Triage, Data Processing 중 하나를 선택합니다.
-2. 노드를 선택해 설정을 바꾸거나 노드를 추가·연결합니다. **Validate**로 실행 가능한지 확인합니다.
-3. 입력 JSON을 편집하고 **Run workflow**를 누릅니다. 실행은 현재 정의의 독립적인 스냅샷을 사용합니다.
-4. **Execution Monitor**에서 결과, 실행 노드, 시작·종료 시각과 오류를 확인합니다. Delay를 가진 실행은 Pause·Step으로 관찰할 수 있습니다.
-5. **Developer Tools**에서 Heap·GC·References를 확인합니다. 실행을 Pin하면 보존 기간이 지나도 객체를 유지합니다.
-6. 자동 GC를 끄고 가상 시간을 진행해 보존 기간을 넘긴 뒤 **Collect garbage**를 실행하면 회수 전후와 슬롯 재사용을 비교할 수 있습니다.
+1. **Workflow 편집**에서 **주문 분류** 템플릿을 선택합니다.
+2. 오른쪽 입력 JSON을 확인하고 **실행하기**를 누릅니다.
+3. **실행 결과**에서 결과 JSON과 처리한 노드 순서를 확인합니다. 기본 입력의 `amount: 1250`은 `decision: "manual_review"`로 분류됩니다. `amount`를 `300`으로 바꾸면 `"approved"`가 됩니다.
 
-Single Run은 입력 하나를, Burst는 한 번에 여러 입력을 실행합니다. Continuous는 이 정적 앱 안에서 합성 입력을 반복 생성합니다. 외부 이벤트·결제·메일·Webhook·사용자 코드는 실행하지 않습니다.
+노드를 선택하면 설정 JSON이 나타납니다. **노드 추가**를 펼치면 새 노드를 추가할 수 있습니다. 실행은 현재 정의의 독립적인 스냅샷을 사용합니다.
+
+**반복 실행·시간 제어**를 펼치면 Burst·반복 실행·일시 정지·Step을 사용할 수 있습니다. Burst는 한 번에 여러 입력을 실행하고, 반복 실행은 이 정적 앱 안에서 합성 입력을 생성합니다. 외부 이벤트·결제·메일·Webhook·사용자 코드는 실행하지 않습니다.
+
+객체의 수명을 살펴보려면 **개발자 도구**로 이동합니다. Heap은 남아 있는 객체, GC는 회수 전후, References는 참조 관계를 보여 줍니다. GC 화면의 **객체 회수를 직접 확인하는 방법**을 펼치면 재현 순서가 나옵니다. Run을 Pin하면 보존 기간이 지나도 객체를 유지합니다.
 
 ## 화면
 
@@ -29,10 +30,10 @@ Single Run은 입력 하나를, Burst는 한 번에 여러 입력을 실행합�
 | GC | Root·Mark·Sweep 결과, 실제 수집 시간, 자동 수집 설정, 직전·직후 스냅샷 |
 | References | Run·Task·Value·Continuation의 강한 참조, Root와 도달 가능성, 세대가 포함된 Handle |
 
-![Execution Monitor — 완료 실행의 실제 결과와 노드별 처리 순서](docs/screenshots/execution-monitor.png)
-![Heap Inspector — 실제 arena 슬롯과 객체 개수](docs/screenshots/heap-inspector.png)
-![GC Inspector — Rust에서 기록한 수집 결과](docs/screenshots/gc-inspector.png)
-![References — 실제 실행 객체의 순환 참조](docs/screenshots/references-graph.png)
+![실행 결과 — 실제 결과와 노드별 처리 순서](docs/screenshots/ko-execution-monitor.png)
+![Heap — 실제 arena 슬롯과 객체 개수](docs/screenshots/ko-heap-inspector.png)
+![GC — Rust에서 기록한 수집 결과](docs/screenshots/ko-gc-inspector.png)
+![References — 실제 실행 객체의 순환 참조](docs/screenshots/ko-references-graph.png)
 
 ## 실행 모델과 아키텍처
 

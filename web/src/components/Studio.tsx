@@ -1,3 +1,4 @@
+import { displayLabel, errorText, canvasLabels } from "../labels";
 import { useEffect, useMemo, useState } from "react";
 import {
   ReactFlow,
@@ -36,22 +37,33 @@ const kindLabels: Record<NodeKind, string> = {
   output: "Output",
 };
 const kindDescriptions: Record<NodeKind, string> = {
-  trigger: "Receive an input event",
-  transform: "Set a field in your data",
-  condition: "Choose a true or false path",
-  delay: "Wait in virtual time",
-  output: "Return the final result",
+  trigger: "입력 데이터를 받아 실행을 시작합니다",
+  transform: "데이터의 필드 값을 바꿉니다",
+  condition: "조건에 따라 True 또는 False 경로로 진행합니다",
+  delay: "정해진 가상 시간만큼 기다립니다",
+  output: "최종 결과를 반환합니다",
 };
 
 function nodeDescription(node: WorkflowNode) {
-  if (node.kind === "trigger") return "When an event arrives";
-  if (node.kind === "output") return "Return execution result";
+  if (node.kind === "trigger") return "입력을 받아 시작";
+  if (node.kind === "output") return "실행 결과 반환";
   if (node.kind === "delay")
-    return `Wait ${Number(node.config.duration_ms ?? 0).toLocaleString()} ms`;
-  if (node.kind === "condition")
-    return `${node.config.field ?? "field"} ${node.config.operator ?? "eq"} ${JSON.stringify(node.config.value ?? null)}`;
+    return `${Number(node.config.duration_ms ?? 0).toLocaleString()} ms 대기`;
+  if (node.kind === "condition") {
+    const operator =
+      {
+        eq: "=",
+        ne: "≠",
+        gt: ">",
+        gte: "≥",
+        lt: "<",
+        lte: "≤",
+        exists: "존재 여부",
+      }[String(node.config.operator)] ?? node.config.operator;
+    return `${node.config.field ?? "field"} ${operator ?? "="} ${node.config.operator === "exists" ? "" : JSON.stringify(node.config.value ?? null)}`;
+  }
   return node.config.fail
-    ? "Intentional failure enabled"
+    ? "오류 재현 설정이 켜져 있습니다"
     : `${node.config.field ?? "field"} → ${JSON.stringify(node.config.value ?? null)}`;
 }
 
@@ -71,7 +83,7 @@ function WorkflowNodeCard({ data, selected }: NodeProps<FlowNode>) {
           type="target"
           position={Position.Top}
           id="in"
-          aria-label={`Connect to ${node.label}`}
+          aria-label={`${displayLabel(node.label)} 입력 연결점`}
         />
       )}
       <div className="workflow-node-top">
@@ -87,7 +99,7 @@ function WorkflowNodeCard({ data, selected }: NodeProps<FlowNode>) {
         )}
         <span className="node-dots">•••</span>
       </div>
-      <strong>{node.label}</strong>
+      <strong>{displayLabel(node.label)}</strong>
       <div className="node-description" title={nodeDescription(node)}>
         {nodeDescription(node)}
       </div>
@@ -100,14 +112,14 @@ function WorkflowNodeCard({ data, selected }: NodeProps<FlowNode>) {
             position={Position.Bottom}
             id="true"
             style={{ left: "25%" }}
-            aria-label={`${node.label} true branch`}
+            aria-label={`${displayLabel(node.label)} True 연결점`}
           />
           <Handle
             type="source"
             position={Position.Bottom}
             id="false"
             style={{ left: "75%" }}
-            aria-label={`${node.label} false branch`}
+            aria-label={`${displayLabel(node.label)} False 연결점`}
           />
         </>
       ) : (
@@ -116,7 +128,7 @@ function WorkflowNodeCard({ data, selected }: NodeProps<FlowNode>) {
             type="source"
             position={Position.Bottom}
             id="out"
-            aria-label={`Connect from ${node.label}`}
+            aria-label={`${displayLabel(node.label)} 출력 연결점`}
           />
         )
       )}
@@ -246,6 +258,7 @@ export function WorkflowCanvas({
   };
   return (
     <ReactFlow
+      ariaLabelConfig={canvasLabels}
       key={`${workflow.id}-${workflow.nodes.length}`}
       nodes={nodes}
       edges={edges}
@@ -266,7 +279,7 @@ export function WorkflowCanvas({
         onSelect?.(null);
       }}
       fitView
-      fitViewOptions={{ padding: 0.22 }}
+      fitViewOptions={{ padding: 0.12, minZoom: 0.85, maxZoom: 1 }}
       minZoom={0.25}
       maxZoom={1.8}
       nodesDraggable={!readOnly}
@@ -332,9 +345,7 @@ export function Studio({
   inputError,
   saveStatus,
 }: StudioProps) {
-  const [selected, setSelected] = useState<string | null>(
-    workflow.nodes.find((node) => node.kind === "condition")?.id ?? null,
-  );
+  const [selected, setSelected] = useState<string | null>(null);
   const [config, setConfig] = useState("");
   const [configError, setConfigError] = useState<string | null>(null);
   const selectedNode = workflow.nodes.find((node) => node.id === selected);
@@ -356,11 +367,13 @@ export function Studio({
     try {
       const value: unknown = JSON.parse(config);
       if (!value || Array.isArray(value) || typeof value !== "object")
-        throw new Error("Node configuration must be a JSON object.");
+        throw new Error("노드 설정은 JSON 객체여야 합니다.");
       updateNode({ config: value as WorkflowNode["config"] });
       setConfigError(null);
     } catch (error) {
-      setConfigError(error instanceof Error ? error.message : String(error));
+      setConfigError(
+        errorText(error instanceof Error ? error.message : String(error)),
+      );
     }
   };
   const addNode = (kind: NodeKind) => {
@@ -369,7 +382,7 @@ export function Studio({
     const node: WorkflowNode = {
       id,
       kind,
-      label: `New ${kind}`,
+      label: `새 ${kindLabels[kind]}`,
       config: defaultConfig(kind),
       position: { x: 800, y: Math.min(workflow.nodes.length * 45, 550) },
     };
@@ -391,19 +404,19 @@ export function Studio({
       <aside className="studio-sidebar">
         <div className="sidebar-section">
           <div className="section-overline">
-            WORKSPACE <span className="tiny-tag">LOCAL</span>
+            작업 공간 <span className="tiny-tag">로컬</span>
           </div>
           <div className="workspace-heading">
             <span className="workspace-avatar">F</span>
             <div>
-              <strong>My workflows</strong>
-              <small>Stored in this browser</small>
+              <strong>내 Workflow</strong>
+              <small>이 브라우저에 저장됩니다</small>
             </div>
           </div>
         </div>
         <div className="sidebar-section templates-section">
           <div className="section-overline">
-            TEMPLATES <span>{templates.length}</span>
+            템플릿 선택 <span>{templates.length}</span>
           </div>
           <div className="template-list">
             {templates.map((template, index) => (
@@ -412,11 +425,7 @@ export function Studio({
                 key={template.id}
                 onClick={() => {
                   onTemplate(template.id);
-                  setSelected(
-                    template.workflow.nodes.find(
-                      (node) => node.kind === "condition",
-                    )?.id ?? null,
-                  );
+                  setSelected(null);
                 }}
                 aria-label={template.name}
               >
@@ -434,7 +443,7 @@ export function Studio({
                 </span>
                 <span>
                   {template.name}
-                  <small>{template.workflow.nodes.length} nodes</small>
+                  <small>노드 {template.workflow.nodes.length}개</small>
                 </span>
                 {workflow.id === template.id && (
                   <span className="active-marker" />
@@ -443,11 +452,9 @@ export function Studio({
             ))}
           </div>
         </div>
-        <div className="sidebar-section">
-          <div className="section-overline">
-            NODE LIBRARY <span className="muted">+</span>
-          </div>
-          <p className="sidebar-description">Add a step to your workflow.</p>
+        <details className="sidebar-section node-library-section">
+          <summary>노드 추가</summary>
+          <p className="sidebar-description">필요한 처리 단계를 추가합니다.</p>
           <div className="node-library">
             {(
               [
@@ -462,7 +469,7 @@ export function Studio({
                 key={kind}
                 onClick={() => addNode(kind)}
                 className="library-button"
-                aria-label={`Add ${kindLabels[kind]} node`}
+                aria-label={`${kindLabels[kind]} 노드 추가`}
                 disabled={workflow.nodes.length >= 64}
               >
                 <span className={`library-icon tone-${kind}`}>
@@ -473,18 +480,18 @@ export function Studio({
               </button>
             ))}
           </div>
-        </div>
+        </details>
         <div className="sidebar-bottom">
           <div className="engine-mini">
             <span className="status-light" />
             <div>
-              <strong>Runs right here.</strong>
-              <span>Rust power. Browser privacy.</span>
+              <strong>브라우저에서 바로 실행</strong>
+              <span>입력을 외부로 전송하지 않습니다.</span>
             </div>
           </div>
           <button className="text-button muted" onClick={onResetWorkflow}>
             <Icon name="reset" size={14} />
-            Reset workflow definition
+            템플릿으로 되돌리기
           </button>
         </div>
       </aside>
@@ -494,7 +501,7 @@ export function Studio({
             <Icon name="workflow" size={16} />
             <span>Workflow</span>
             <Icon name="chevron" size={11} />
-            <strong>{workflow.name}</strong>
+            <strong>{displayLabel(workflow.name)}</strong>
           </div>
           <div className="canvas-toolbar-right">
             <span className="save-status">
@@ -506,7 +513,7 @@ export function Studio({
               onClick={onValidate}
             >
               <Icon name="check" size={14} />
-              Validate
+              검증하기
             </button>
           </div>
         </div>
@@ -519,30 +526,27 @@ export function Studio({
           />
           <div className="canvas-label">
             <span className="status-light" />
-            <span>WORKFLOW DEFINITION</span>
+            <span>실행할 Workflow</span>
           </div>
         </div>
         <div className="canvas-status">
           <span>
             <span className="small-dot" />
-            {workflow.nodes.length} nodes{" "}
+            노드 {workflow.nodes.length}개{" "}
             <span className="dot-separator">·</span>
-            {workflow.edges.length} connections
+            연결 {workflow.edges.length}개
           </span>
-          <span>
-            Drag to move <span className="dot-separator">·</span>Connect handles
-            to link nodes
-          </span>
+          <span>그래프 드래그 · +/−로 확대·축소</span>
         </div>
         {validation && !validation.valid && (
           <div className="validation-errors" role="alert">
             <strong>
               <Icon name="info" size={15} />
-              Workflow needs attention
+              다음 항목을 수정한 뒤 실행하세요
             </strong>
             <ul>
               {validation.errors.map((error, i) => (
-                <li key={`${i}-${error}`}>{error}</li>
+                <li key={`${i}-${error}`}>{errorText(error)}</li>
               ))}
             </ul>
           </div>
@@ -552,12 +556,12 @@ export function Studio({
         <div className="inspector-header">
           <div>
             <Icon name="code" size={16} />
-            <strong>Node inspector</strong>
+            <strong>노드 설정</strong>
           </div>
           {selectedNode && (
             <button
               className="icon-button"
-              aria-label="Close node inspector"
+              aria-label="노드 설정 닫기"
               onClick={() => setSelected(null)}
             >
               <Icon name="close" size={15} />
@@ -574,22 +578,22 @@ export function Studio({
                   <Icon name={kindIcons[selectedNode.kind]} size={22} />
                 </span>
                 <div>
-                  <h3>{selectedNode.label}</h3>
+                  <h3>{displayLabel(selectedNode.label)}</h3>
                   <span>{kindDescriptions[selectedNode.kind]}</span>
                 </div>
               </div>
               <label className="field-label" htmlFor="node-label">
-                Node name
+                노드 이름
               </label>
               <input
                 id="node-label"
-                value={selectedNode.label}
+                value={displayLabel(selectedNode.label)}
                 maxLength={120}
                 onChange={(event) => updateNode({ label: event.target.value })}
               />
               <div className="config-label">
                 <label className="field-label" htmlFor="node-config">
-                  Configuration
+                  설정
                 </label>
                 <span className="code-tag">JSON</span>
               </div>
@@ -599,62 +603,63 @@ export function Studio({
                 value={config}
                 onChange={(event) => setConfig(event.target.value)}
                 spellCheck={false}
-                aria-label="Node configuration JSON"
+                aria-label="노드 설정 JSON"
               />
               {configError && (
                 <p className="field-error" role="alert">
-                  {configError}
+                  {errorText(configError)}
                 </p>
               )}
               {selectedNode.kind === "condition" && (
                 <p className="field-help">
-                  Compare a top-level field using eq, ne, gt, gte, lt, lte, or
-                  exists.
+                  field는 비교할 필드, value는 기준값입니다. gte는 이상, gt는
+                  초과, eq는 같음을 뜻합니다.
                 </p>
               )}
               {selectedNode.kind === "transform" && (
                 <p className="field-help">
-                  Assign a constant to one top-level field. Set “fail” to true
-                  to test error handling.
+                  field에 지정한 필드를 value 값으로 바꿉니다. fail을 true로
+                  설정하면 오류를 재현합니다.
                 </p>
               )}
               {selectedNode.kind === "delay" && (
                 <p className="field-help">
-                  Duration in virtual milliseconds, from 0 to 60,000.
+                  duration_ms는 기다릴 가상 시간입니다. 0~60,000 ms를
+                  입력합니다.
                 </p>
               )}
               <div className="inspector-actions">
                 <button className="button button-small" onClick={applyConfig}>
                   <Icon name="check" size={14} />
-                  Apply configuration
+                  설정 적용
                 </button>
                 <button
                   className="icon-button danger-hover"
                   onClick={removeNode}
-                  aria-label="Delete selected node"
-                  title="Delete selected node"
+                  aria-label="선택한 노드 삭제"
+                  title="선택한 노드 삭제"
                 >
                   <Icon name="trash" size={15} />
                 </button>
               </div>
               <div className="node-id">
-                NODE ID <code>{selectedNode.id}</code>
+                노드 ID <code>{selectedNode.id}</code>
               </div>
             </div>
           ) : (
             <div className="inspector-placeholder">
               <Icon name="search" size={25} />
-              <h3>Explore your workflow</h3>
+              <h3>먼저 실행해 보세요</h3>
               <p>
-                Select a node to edit its name and configuration, or add a new
-                step from the library.
+                준비된 입력으로 바로 실행할 수 있습니다. 처리 규칙을 바꾸려면
+                그래프에서 노드를 선택하세요.
               </p>
               <label className="field-label" htmlFor="workflow-name">
-                Workflow name
+                Workflow 이름
               </label>
               <input
                 id="workflow-name"
-                value={workflow.name}
+                value={displayLabel(workflow.name)}
                 maxLength={120}
                 onChange={(event) =>
                   onWorkflow({ ...workflow, name: event.target.value })
@@ -666,16 +671,18 @@ export function Studio({
             <div className="input-section-heading">
               <strong>
                 <Icon name="bolt" size={16} />
-                Event input
+                입력 데이터
               </strong>
               <span className="code-tag">JSON</span>
             </div>
-            <p>The data passed to your next execution.</p>
+            <p>
+              다음 Run에 전달할 데이터입니다. 처음에는 그대로 실행해도 됩니다.
+            </p>
             <textarea
               className="code-editor input-editor"
               value={input}
               onChange={(event) => onInput(event.target.value)}
-              aria-label="Event input JSON"
+              aria-label="입력 데이터 JSON"
               spellCheck={false}
             />
             {inputError ? (
@@ -685,17 +692,17 @@ export function Studio({
             ) : (
               <div className="input-valid">
                 <Icon name="check" size={12} />
-                Valid JSON object
+                사용 가능한 JSON
               </div>
             )}
           </div>
         </div>
         <div className="inspector-footer">
           {validation?.valid ? (
-            <Badge tone="completed">Ready to execute</Badge>
+            <Badge tone="completed">실행 가능</Badge>
           ) : (
             <Badge tone="neutral">
-              {validation ? "Review validation" : "Validation pending"}
+              {validation ? "검증 결과 확인" : "검증 대기"}
             </Badge>
           )}
           <span>v1.0</span>

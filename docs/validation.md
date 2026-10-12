@@ -14,7 +14,7 @@
 | Rust 검사 | `cargo fmt --check`, Clippy `--all-targets --locked -- -D warnings` 통과 |
 | Native unit tests | **23개 통과** |
 | 실제 WASM Vitest | **13개 통과** |
-| 로컬 프로덕션 E2E | **8개 통과**, 1440×1000 및 400×844 viewport |
+| 로컬 프로덕션 E2E | **9개 통과**, 1440×1000 및 400 px 폭 viewport |
 | 빌드 | WASM release, TypeScript 검사, Vite production build 통과 |
 | 문서 | README Mermaid 8개 실제 파싱·렌더링 확인 |
 
@@ -44,6 +44,7 @@
 6. 선택 Edge만 삭제한 뒤 실제 연결 핸들을 드래그하여 복구하고 실행한다.
 7. Continuous 실행 중 편집 정의가 유효하지 않게 바뀌어도 Stop으로 중단한다.
 8. 400 px 폭에서 세 상위 화면의 가로 넘침이 없는지 확인한다.
+9. 한국어 안내, 기본으로 접힌 고급 제어, 주요 안내·입력 글자 15 px 이상, 모바일 그래프 높이와 실제 실행 결과를 확인한다.
 
 각 E2E는 browser console error와 page error도 검사한다. Firefox·Safari와 실제 휴대폰 기기는 검증하지 않았다.
 
@@ -99,6 +100,8 @@ WASM 최고 크기는 실제 `WebAssembly.Memory.buffer.byteLength`다. 수집 �
 10,000 Run의 자동 On/Off capacity는 1,228/1,600, 재사용은 158,772/158,400, 최종 점유 객체는 모두 0이었다. 브라우저와 재사용 횟수가 다른 이유는 브라우저만 warm-up 슬롯을 유지하기 때문이다.
 
 ## 실제 화면 증거
+
+`ko-`로 시작하는 캡처는 2026-10-12 한국어·가독성 개선 후 로컬 앱의 실제 화면이다. 기본 사용 순서를 안내하고 노드 설정·반복 실행·시간 제어를 필요할 때 펼치도록 바꿨다. 주요 본문과 조작 글자는 15–16 px, 노드 제목은 18 px이며 좁은 화면에서는 세로로 배치한다. 기존 영문 캡처와 벤치마크는 최초 구현의 기록으로 보존한다.
 
 [screenshots](screenshots/)에는 실제 앱의 PNG가 있다. Studio는 공개 Pages 배포에서, 나머지는 로컬 앱에서 캡처했다. 데이터는 템플릿의 합성 입력이다. Desktop 캡처는 1440×1000, 모바일 캡처는 400 px 폭이다. `gc-comparison.png`는 앱이 수동 수집 직전·직후의 실제 Heap 스냅샷을 표시한 비교 카드를 캡처했다.
 

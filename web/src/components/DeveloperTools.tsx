@@ -1,3 +1,4 @@
+import { displayLabel, statusLabel, errorText, canvasLabels } from "../labels";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Background,
@@ -113,7 +114,9 @@ export function DeveloperTools({
         );
       setQueryError(null);
     } catch (error) {
-      setQueryError(error instanceof Error ? error.message : String(error));
+      setQueryError(
+        errorText(error instanceof Error ? error.message : String(error)),
+      );
     }
   }, [engine, revision, tab, referenceRun]);
   useEffect(() => {
@@ -158,7 +161,7 @@ export function DeveloperTools({
   return (
     <div className="developer-layout">
       <div className="dev-toolbar">
-        <div className="dev-tabs" role="tablist" aria-label="Developer tool">
+        <div className="dev-tabs" role="tablist" aria-label="개발자 도구 선택">
           <button
             className={tab === "heap" ? "active" : ""}
             role="tab"
@@ -175,7 +178,7 @@ export function DeveloperTools({
             onClick={() => onTab("gc")}
           >
             <Icon name="reset" size={16} />
-            Garbage Collection
+            GC
           </button>
           <button
             className={tab === "references" ? "active" : ""}
@@ -195,32 +198,32 @@ export function DeveloperTools({
               onChange={(event) =>
                 onCommand({ op: "auto_gc", enabled: event.target.checked })
               }
-              aria-label="Auto GC"
+              aria-label="자동 GC"
             />
             <span className="toggle-track" />
-            Auto GC
+            자동 GC
           </label>
           <span className="toolbar-separator" />
           <button
             className="button button-small"
             onClick={() => onCommand({ op: "step", delta_ms: 5000 })}
-            title="Advance virtual time by 5 seconds and pause"
+            title="가상 시간을 5초 진행한 뒤 일시 정지"
           >
             <Icon name="step" size={14} />
-            Advance 5 seconds
+            가상 시간 +5초
           </button>
           <button
             className="button button-small button-primary-soft"
             onClick={collect}
           >
             <Icon name="reset" size={14} />
-            Collect garbage
+            GC 실행
           </button>
         </div>
       </div>
       {queryError && (
         <div className="notice notice-error" role="alert">
-          {queryError}
+          {errorText(queryError)}
         </div>
       )}
       <div className={`dev-content ${tab === "gc" ? "dev-content-wide" : ""}`}>
@@ -229,51 +232,54 @@ export function DeveloperTools({
             <>
               <div className="dev-page-heading">
                 <div>
-                  <div className="eyebrow">RUNTIME MEMORY</div>
-                  <h2>Every object, accounted for.</h2>
-                  <p>The generational heap behind your workflow executions.</p>
+                  <div className="eyebrow">Heap · 객체 저장소</div>
+                  <h2>지금 어떤 객체가 남아 있나요?</h2>
+                  <p>
+                    점유 슬롯은 남아 있는 객체 수입니다. 빈 슬롯은 다음 실행에서
+                    재사용합니다.
+                  </p>
                 </div>
-                <Badge tone="completed">Live engine</Badge>
+                <Badge tone="completed">실제 엔진 상태</Badge>
               </div>
               <div className="metrics-grid">
                 <Metric
-                  label="Occupied slots"
+                  label="점유 슬롯"
                   value={
                     <span data-testid="live-objects">
                       {number(state.heap.live_objects)}
                     </span>
                   }
-                  detail={`${number(state.heap.capacity)} capacity · ${state.retained_runs} retained / ${state.pinned_runs} pinned runs`}
+                  detail={`전체 ${number(state.heap.capacity)}개 · 보존 ${state.retained_runs} / Pin ${state.pinned_runs} Run`}
                   accent="#72d8b7"
                 />
                 <Metric
-                  label="Free slots"
+                  label="빈 슬롯"
                   value={number(state.heap.free_slots)}
-                  detail="Available for reuse"
+                  detail="새 객체에 재사용 가능"
                 />
                 <Metric
-                  label="Slot reuses"
+                  label="슬롯 재사용 횟수"
                   value={number(state.heap.reused_slots)}
-                  detail={`${number(state.heap.allocations)} managed allocations`}
+                  detail={`관리 객체 누적 할당 ${number(state.heap.allocations)}회`}
                 />
                 <Metric
-                  label="WASM linear memory"
+                  label="WASM 선형 메모리"
                   value={bytes(memoryBytes)}
-                  detail="Committed byte length"
+                  detail="실제 할당된 메모리 크기"
                   accent="#a8b0f4"
                 />
               </div>
               <div className="heap-charts">
                 <section className="panel">
                   <div className="panel-title">
-                    <h3>Managed object count</h3>
+                    <h3>객체 수 변화</h3>
                     <span className="chart-legend">
                       <i />
-                      Occupied
+                      점유
                       <i className="capacity" />
-                      Capacity
+                      전체 슬롯
                       <i className="free" />
-                      Free
+                      비어 있음
                     </span>
                   </div>
                   <div className="dual-chart">
@@ -312,20 +318,20 @@ export function DeveloperTools({
                     <span>
                       {samples.length ? duration(samples[0].now) : "0 ms"}
                     </span>
-                    <span>Last {samples.length} samples · virtual time</span>
+                    <span>최근 {samples.length}개 측정 · 가상 시간</span>
                     <span>{duration(state.now_ms)}</span>
                   </div>
                   <p className="chart-note">
-                    Shared scale: 0–
+                    공통 눈금: 0–
                     {number(
                       Math.max(1, ...samples.map((sample) => sample.capacity)),
                     )}{" "}
-                    slots. One sample per second.
+                    슬롯 · 1초마다 측정
                   </p>
                 </section>
                 <section className="panel allocation-panel">
                   <div className="panel-title">
-                    <h3>Objects by type</h3>
+                    <h3>유형별 객체 수</h3>
                     <span>{state.heap.live_objects}</span>
                   </div>
                   {["Run", "Task", "Value", "Continuation"].map((kind) => (
@@ -352,13 +358,13 @@ export function DeveloperTools({
               </div>
               <section className="panel linear-memory-panel">
                 <div className="panel-title">
-                  <h3>WASM linear memory</h3>
+                  <h3>WASM 선형 메모리</h3>
                   <span>
-                    {bytes(memoryBytes)} current ·{" "}
+                    현재 {bytes(memoryBytes)} ·{" "}
                     {bytes(
                       Math.max(0, ...samples.map((sample) => sample.bytes)),
                     )}{" "}
-                    sampled peak
+                    측정 중 최대
                   </span>
                 </div>
                 <Sparkline
@@ -367,25 +373,25 @@ export function DeveloperTools({
                   height={65}
                 />
                 <div className="chart-foot">
-                  <span>Bytes · zero-based scale</span>
-                  <span>Independent from managed object counts</span>
+                  <span>단위 bytes · 0부터 표시</span>
+                  <span>관리 객체 수와 별도로 측정</span>
                 </div>
               </section>
               <section className="panel slot-panel">
                 <div className="panel-title">
                   <div>
-                    <h3>Heap slot map</h3>
+                    <h3>Heap 슬롯 보기</h3>
                     <p>
-                      Inspect a slot to check its generation and current object.
+                      슬롯을 누르면 현재 객체와 Generation을 확인할 수 있습니다.
                     </p>
                   </div>
                   <span className="slot-legend">
                     <i className="slot-occupied" />
-                    Occupied
+                    점유
                     <i className="slot-free" />
-                    Free
+                    비어 있음
                     <i className="slot-unreachable" />
-                    Unreachable
+                    회수 대상
                   </span>
                 </div>
                 <div className="slot-map" data-testid="slot-map">
@@ -395,7 +401,7 @@ export function DeveloperTools({
                         key={slot.index}
                         className={`slot slot-${slot.state}${slot.state === "occupied" && !slot.reachable ? " slot-unreachable" : ""}${selectedHandle?.index === slot.index && selectedHandle.generation === slot.generation ? " selected" : ""}`}
                         title={`Slot ${slot.index} · generation ${slot.generation} · ${slot.kind ?? slot.state}${slot.reachable ? " · reachable" : ""}`}
-                        aria-label={`Inspect slot ${slot.index} generation ${slot.generation}`}
+                        aria-label={`슬롯 ${slot.index} 세대 ${slot.generation} 조회`}
                         onClick={() =>
                           onHandle({
                             index: slot.index,
@@ -408,26 +414,27 @@ export function DeveloperTools({
                     ))
                   ) : (
                     <div className="slot-map-empty">
-                      The heap is empty. Run a workflow to allocate real runtime
-                      objects.
+                      Heap이 비어 있습니다. Workflow를 실행하면 실제 객체가
+                      생성됩니다.
                     </div>
                   )}
                 </div>
                 <div className="slot-panel-foot">
                   <span>
                     {heap?.truncated
-                      ? `Showing first ${heap.slots.length} slots`
-                      : `${heap?.slots.length ?? 0} slots`}
+                      ? `처음 ${heap.slots.length}개 슬롯 표시`
+                      : `슬롯 ${heap?.slots.length ?? 0}개`}
                   </span>
                   <span>
-                    {state.heap.retired_slots} retired · Selection adds no root
+                    재사용 중단 {state.heap.retired_slots}개 · 선택만으로
+                    보존되지 않음
                   </span>
                 </div>
               </section>
               <section className="panel object-table-panel">
                 <div className="panel-title">
-                  <h3>Live objects</h3>
-                  <span>{heap?.objects.length ?? 0} in this snapshot</span>
+                  <h3>남아 있는 객체</h3>
+                  <span>현재 스냅샷 {heap?.objects.length ?? 0}개</span>
                 </div>
                 {heap?.objects.length ? (
                   <div className="table-scroll">
@@ -435,10 +442,10 @@ export function DeveloperTools({
                       <thead>
                         <tr>
                           <th>Handle</th>
-                          <th>Object</th>
-                          <th>Type</th>
-                          <th>Reachability</th>
-                          <th>Refs</th>
+                          <th>객체</th>
+                          <th>유형</th>
+                          <th>보존 여부</th>
+                          <th>참조 수</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -462,7 +469,7 @@ export function DeveloperTools({
                                 {handleId(object.handle)}
                               </button>
                             </td>
-                            <td>{object.label}</td>
+                            <td>{displayLabel(object.label)}</td>
                             <td>
                               <span
                                 className="type-dot"
@@ -476,9 +483,9 @@ export function DeveloperTools({
                               {object.root ? (
                                 <Badge tone="completed">root</Badge>
                               ) : object.reachable ? (
-                                "Reachable"
+                                "Root에서 도달 가능"
                               ) : (
-                                <span className="amber-text">Unreachable</span>
+                                <span className="amber-text">회수 대상</span>
                               )}
                             </td>
                             <td>{object.references.length}</td>
@@ -488,71 +495,89 @@ export function DeveloperTools({
                     </table>
                   </div>
                 ) : (
-                  <p className="table-empty">No live objects in the heap.</p>
+                  <p className="table-empty">
+                    Heap에 남아 있는 객체가 없습니다.
+                  </p>
                 )}
               </section>
               <div className="technical-note">
                 <Icon name="info" size={16} />
                 <p>
-                  GC reclaims managed objects and makes slots reusable. WASM
-                  linear memory can remain at its high-water mark after
-                  collection.
+                  GC는 객체를 회수하고 슬롯을 재사용 가능하게 만듭니다. WASM
+                  메모리 크기는 회수 후에도 그대로일 수 있습니다.
                 </p>
               </div>
             </>
           )}
           {tab === "gc" && (
             <>
+              <details className="gc-guide">
+                <summary>객체 회수를 직접 확인하는 방법</summary>
+                <ol>
+                  <li>
+                    자동 GC를 끄고, Workflow 편집 화면에서 주문 분류를 한 번
+                    실행합니다.
+                  </li>
+                  <li>
+                    이 화면으로 돌아와 가상 시간 +5초를 두 번 누릅니다. 완료
+                    객체의 보존 기간을 넘깁니다.
+                  </li>
+                  <li>
+                    GC 실행을 누르고 아래 전후 비교에서 점유 객체 수가 줄었는지
+                    확인합니다.
+                  </li>
+                </ol>
+                <p>
+                  Pin한 Run과 아직 실행 중인 객체는 유지됩니다. Pin은 실행 결과
+                  화면에서 해제할 수 있습니다.
+                </p>
+              </details>
               <div className="dev-page-heading">
                 <div>
-                  <div className="eyebrow">MARK & SWEEP</div>
-                  <h2>Reclaim what is no longer reachable.</h2>
+                  <div className="eyebrow">GC · 사용하지 않는 객체 회수</div>
+                  <h2>GC 전후에 무엇이 달라졌나요?</h2>
                   <p>
-                    Root tracing, slot reclamation, and measured collection
-                    pauses.
+                    Root에서 연결이 끊긴 객체를 회수합니다. 수집 전후의 객체
+                    수와 실제 정지 시간을 비교하세요.
                   </p>
                 </div>
                 <Badge tone={state.auto_gc ? "completed" : "neutral"}>
-                  {state.auto_gc
-                    ? "Automatic collection on"
-                    : "Manual collection"}
+                  {state.auto_gc ? "자동 GC 켜짐" : "수동 GC 모드"}
                 </Badge>
               </div>
               <div className="metrics-grid">
                 <Metric
-                  label="Collection cycles"
+                  label="GC 실행 횟수"
                   value={number(state.gc.cycles)}
-                  detail={`Total collector time ${ms(state.gc.cumulative_ms)}`}
+                  detail={`누적 GC 시간 ${ms(state.gc.cumulative_ms)}`}
                 />
                 <Metric
-                  label="Objects reclaimed"
+                  label="회수한 객체"
                   value={number(state.gc.total_reclaimed)}
-                  detail="Cumulative since diagnostics reset"
+                  detail="진단 초기화 이후 누적"
                   accent="#72d8b7"
                 />
                 <Metric
-                  label="Last GC pause"
+                  label="최근 GC 정지 시간"
                   value={state.gc.last ? ms(state.gc.last.pause_ms) : "—"}
                   detail={
                     state.gc.last
-                      ? `Last at ${duration(state.gc.last.at_ms)} virtual`
-                      : "No collection measured yet"
+                      ? `가상 시간 ${duration(state.gc.last.at_ms)}에 실행`
+                      : "아직 GC 측정 없음"
                   }
                   accent="#d6b875"
                 />
                 <Metric
-                  label="Current roots"
+                  label="현재 Root 수"
                   value={number(state.roots.length)}
-                  detail={`${state.active_runs} active · ${state.pinned_runs} pinned runs`}
+                  detail={`실행 중 ${state.active_runs}개 · Pin ${state.pinned_runs}개`}
                 />
               </div>
               <div className="gc-charts">
                 <section className="panel">
                   <div className="panel-title">
-                    <h3>Collection pause</h3>
-                    <span>
-                      Milliseconds · last {state.gc.history.length} cycles
-                    </span>
+                    <h3>GC 정지 시간 변화</h3>
+                    <span>단위 ms · 최근 {state.gc.history.length}회</span>
                   </div>
                   <Sparkline
                     values={state.gc.history.map((cycle) => cycle.pause_ms)}
@@ -560,9 +585,9 @@ export function DeveloperTools({
                     height={115}
                   />
                   <div className="chart-foot">
-                    <span>Cycle {state.gc.history[0]?.cycle ?? "—"}</span>
+                    <span>회차 {state.gc.history[0]?.cycle ?? "—"}</span>
                     <span>
-                      Peak{" "}
+                      최대{" "}
                       {state.gc.history.length
                         ? ms(
                             Math.max(
@@ -578,13 +603,13 @@ export function DeveloperTools({
                 </section>
                 <section className="panel gc-phases">
                   <div className="panel-title">
-                    <h3>Last collection phases</h3>
+                    <h3>최근 GC 단계별 시간</h3>
                     <span>#{state.gc.last?.cycle ?? "—"}</span>
                   </div>
                   <div className="phase-row">
                     <span>
                       <i className="phase-dot mark" />
-                      Mark reachable objects
+                      Mark · 연결된 객체 표시
                     </span>
                     <strong>
                       {state.gc.last ? ms(state.gc.last.mark_ms) : "—"}
@@ -593,21 +618,21 @@ export function DeveloperTools({
                   <div className="phase-row">
                     <span>
                       <i className="phase-dot sweep" />
-                      Sweep unmarked slots
+                      Sweep · 표시되지 않은 객체 회수
                     </span>
                     <strong>
                       {state.gc.last ? ms(state.gc.last.sweep_ms) : "—"}
                     </strong>
                   </div>
                   <div className="phase-row phase-total">
-                    <span>Total stop-the-world pause</span>
+                    <span>전체 Stop-the-World 시간</span>
                     <strong>
                       {state.gc.last ? ms(state.gc.last.pause_ms) : "—"}
                     </strong>
                   </div>
                   <p>
-                    Pause includes collector overhead. Mark and sweep durations
-                    are measured separately.
+                    전체 시간에는 GC 준비 과정도 포함됩니다. Mark와 Sweep 시간은
+                    각각 측정합니다.
                   </p>
                 </section>
               </div>
@@ -617,52 +642,50 @@ export function DeveloperTools({
               >
                 <div className="panel-title">
                   <div>
-                    <h3>Before & after collection</h3>
-                    <p>Captured around your most recent manual collection.</p>
+                    <h3>GC 실행 전후 비교</h3>
+                    <p>가장 최근에 수동 GC를 실행한 직전·직후 상태입니다.</p>
                   </div>
                   <button className="button button-small" onClick={collect}>
                     <Icon name="reset" size={13} />
-                    Capture collection
+                    GC 실행하고 비교
                   </button>
                 </div>
                 {comparison ? (
                   <>
                     <div className="comparison-flow">
                       <div>
-                        <span>BEFORE</span>
+                        <span>실행 전</span>
                         <strong>
                           {number(comparison.before.stats.live_objects)}
                         </strong>
-                        <small>occupied objects</small>
+                        <small>점유 객체</small>
                       </div>
                       <div className="comparison-arrow">
                         <Icon name="arrow" size={24} />
-                        <span>
-                          {number(comparison.cycle.reclaimed)} reclaimed
-                        </span>
+                        <span>{number(comparison.cycle.reclaimed)}개 회수</span>
                       </div>
                       <div>
-                        <span>AFTER</span>
+                        <span>실행 후</span>
                         <strong>
                           {number(comparison.after.stats.live_objects)}
                         </strong>
-                        <small>occupied objects</small>
+                        <small>점유 객체</small>
                       </div>
                       <div className="comparison-detail">
                         <p>
-                          <span>Root handles</span>
+                          <span>Root Handle 수</span>
                           <strong>{comparison.cycle.roots}</strong>
                         </p>
                         <p>
-                          <span>Marked reachable</span>
+                          <span>Mark한 객체</span>
                           <strong>{comparison.cycle.marked}</strong>
                         </p>
                         <p>
-                          <span>Slots swept</span>
+                          <span>Sweep에서 검사한 슬롯</span>
                           <strong>{comparison.cycle.swept}</strong>
                         </p>
                         <p>
-                          <span>Free slots after</span>
+                          <span>실행 후 빈 슬롯</span>
                           <strong>{comparison.after.stats.free_slots}</strong>
                         </p>
                       </div>
@@ -689,16 +712,16 @@ export function DeveloperTools({
                           className="type-dot"
                           style={{ background: "#e0b876" }}
                         />
-                        Reclaimed
+                        회수됨
                         <i
                           className="type-dot"
                           style={{ background: "#76d7b6" }}
                         />
-                        Survived
+                        유지됨
                       </span>
                       <span>
-                        GC {ms(comparison.cycle.pause_ms)} · JS command round
-                        trip {ms(comparison.roundTripMs)}
+                        GC {ms(comparison.cycle.pause_ms)} · JS 명령 왕복{" "}
+                        {ms(comparison.roundTripMs)}
                       </span>
                     </div>
                   </>
@@ -706,28 +729,27 @@ export function DeveloperTools({
                   <div className="comparison-empty">
                     <Icon name="layers" size={23} />
                     <p>
-                      Collect garbage to compare the actual heap before and
-                      after a collection.
+                      GC 실행을 누르면 실제 Heap의 변화가 여기에 표시됩니다.
                     </p>
                   </div>
                 )}
               </section>
               <section className="panel">
                 <div className="panel-title">
-                  <h3>Collection history</h3>
-                  <span>Bounded to 60 cycles</span>
+                  <h3>GC 실행 기록</h3>
+                  <span>최근 60회 보관</span>
                 </div>
                 {state.gc.history.length ? (
                   <div className="table-scroll">
                     <table className="data-table">
                       <thead>
                         <tr>
-                          <th>Cycle</th>
-                          <th>Virtual time</th>
+                          <th>회차</th>
+                          <th>가상 시간</th>
                           <th>Roots</th>
-                          <th>Before</th>
+                          <th>실행 전</th>
                           <th>Marked</th>
-                          <th>Reclaimed</th>
+                          <th>회수됨</th>
                           <th>Mark</th>
                           <th>Sweep</th>
                           <th>Pause</th>
@@ -752,15 +774,15 @@ export function DeveloperTools({
                   </div>
                 ) : (
                   <p className="table-empty">
-                    No collections yet. Run a workflow and collect to inspect
-                    the first cycle.
+                    아직 GC 기록이 없습니다. Workflow를 실행한 뒤 GC를 실행해
+                    보세요.
                   </p>
                 )}
               </section>
               <section className="panel root-panel">
                 <div className="panel-title">
-                  <h3>Root registry</h3>
-                  <span>{state.roots.length} handles</span>
+                  <h3>Root 목록 · 객체 보존의 시작점</h3>
+                  <span>Handle {state.roots.length}개</span>
                 </div>
                 {state.roots.length ? (
                   <div className="root-list">
@@ -774,22 +796,19 @@ export function DeveloperTools({
                       >
                         <Icon name="pin" size={13} />
                         <code>{handleId(root.handle)}</code>
-                        <span>{root.reason}</span>
+                        <span>{statusLabel(root.reason)}</span>
                         <Icon name="arrow" size={13} />
                       </button>
                     ))}
                   </div>
                 ) : (
                   <p className="table-empty">
-                    No roots. Unreachable objects are eligible for the next
-                    collection.
+                    Root가 없습니다. 연결이 끊긴 객체는 다음 GC에서 회수됩니다.
                   </p>
                 )}
                 <p className="root-policy">
-                  Active runs, scheduled continuations, pinned runs, and
-                  completed runs within the{" "}
-                  {duration(state.limits.retention_ms)} retention window are
-                  protected.
+                  실행 중인 Run, 대기 중인 Continuation, Pin한 Run과 완료 후{" "}
+                  {duration(state.limits.retention_ms)} 이내의 Run을 보존합니다.
                 </p>
               </section>
             </>
@@ -798,14 +817,15 @@ export function DeveloperTools({
             <>
               <div className="dev-page-heading">
                 <div>
-                  <div className="eyebrow">STRONG REFERENCES</div>
-                  <h2>Follow the life of a run.</h2>
+                  <div className="eyebrow">강한 참조</div>
+                  <h2>객체는 어떻게 연결되어 있나요?</h2>
                   <p>
-                    Actual Rust objects and their references, including cycles.
+                    실제 Run·Task·Value의 참조 관계입니다. 화살표를 따라가면
+                    순환 참조도 확인할 수 있습니다.
                   </p>
                 </div>
                 <div className="reference-filter">
-                  <label htmlFor="reference-run">Scope</label>
+                  <label htmlFor="reference-run">표시 범위</label>
                   <select
                     id="reference-run"
                     value={referenceRun ?? "all"}
@@ -817,13 +837,13 @@ export function DeveloperTools({
                       )
                     }
                   >
-                    <option value="all">All live objects</option>
+                    <option value="all">남아 있는 모든 객체</option>
                     {[...state.runs]
                       .sort((a, b) => b.id - a.id)
                       .map((run) => (
                         <option key={run.id} value={run.id}>
-                          Run #{run.id} · {run.name}
-                          {run.collected ? " (collected)" : ""}
+                          Run #{run.id} · {displayLabel(run.name)}
+                          {run.collected ? " (회수됨)" : ""}
                         </option>
                       ))}
                   </select>
@@ -844,8 +864,8 @@ export function DeveloperTools({
                   Root
                 </span>
                 <span className="reference-count">
-                  {graph?.objects.length ?? 0} objects{" "}
-                  {graph?.truncated && "· limited to 80"}
+                  객체 {graph?.objects.length ?? 0}개{" "}
+                  {graph?.truncated && "· 최대 80개 표시"}
                 </span>
               </div>
               <div className="reference-canvas" data-testid="reference-graph">
@@ -860,21 +880,21 @@ export function DeveloperTools({
                     icon="workflow"
                     title={
                       referenceRun != null
-                        ? "No live graph for this run"
-                        : "The object graph is empty"
+                        ? "이 Run의 객체가 남아 있지 않습니다"
+                        : "객체 그래프가 비어 있습니다"
                     }
                   >
                     {referenceRun != null
-                      ? "Its runtime objects may have been collected. A selected stale handle can still be checked in the inspector."
-                      : "Run a workflow to explore the references created by the engine."}
+                      ? "객체가 이미 회수됐을 수 있습니다. 선택한 Handle의 유효성은 오른쪽에서 확인할 수 있습니다."
+                      : "Workflow를 실행하면 엔진이 생성한 참조 관계를 볼 수 있습니다."}
                   </Empty>
                 )}
               </div>
               <div className="reference-note">
                 <Icon name="info" size={15} />
                 <span>
-                  Task → Run back-references create real runtime cycles. UI
-                  selection is a weak handle; it never extends object lifetime.
+                  Run → Task → Run이 순환 참조를 만듭니다. 화면에서 선택하는
+                  것만으로 객체가 보존되지는 않습니다.
                 </span>
               </div>
             </>
@@ -914,13 +934,13 @@ function ObjectInspector({
   const inspect = () => {
     const match = /^(\d+):(\d+)$/.exec(value.trim());
     if (!match) {
-      setError("Use slot:generation, for example 0:1.");
+      setError("slot:generation 형식으로 입력하세요. 예: 0:1");
       return;
     }
     const index = Number(match[1]);
     const generation = Number(match[2]);
     if (!Number.isSafeInteger(index) || !Number.isSafeInteger(generation)) {
-      setError("Index and generation must be safe non-negative integers.");
+      setError("Index와 Generation은 안전한 범위의 0 이상 정수여야 합니다.");
       return;
     }
     onHandle({ index, generation });
@@ -931,13 +951,13 @@ function ObjectInspector({
       <div className="inspector-header">
         <div>
           <Icon name="search" size={16} />
-          <strong>Object inspector</strong>
+          <strong>객체 상세</strong>
         </div>
         <span className="tiny-tag">WEAK</span>
       </div>
       <div className="object-inspector-body">
         <label className="field-label" htmlFor="handle-input">
-          Generational handle
+          Handle · 슬롯:세대
         </label>
         <div className="handle-input">
           <input
@@ -948,12 +968,12 @@ function ObjectInspector({
               if (event.key === "Enter") inspect();
             }}
             placeholder="slot:generation"
-            aria-label="Handle to inspect"
+            aria-label="조회할 Handle"
           />
           <button
             className="icon-button"
             onClick={inspect}
-            aria-label="Inspect handle"
+            aria-label="Handle 조회"
           >
             <Icon name="arrow" size={16} />
           </button>
@@ -962,10 +982,10 @@ function ObjectInspector({
         {!handle ? (
           <div className="object-placeholder">
             <Icon name="box" size={32} />
-            <h3>Select an object</h3>
+            <h3>객체를 선택하세요</h3>
             <p>
-              Choose a slot, a graph node, or enter a handle to inspect the live
-              Rust heap.
+              슬롯이나 그래프의 객체를 누르세요. Handle을 직접 입력해 조회할
+              수도 있습니다.
             </p>
           </div>
         ) : inspection?.valid && object ? (
@@ -989,35 +1009,35 @@ function ObjectInspector({
                 />
                 {object.kind}
               </span>
-              <Badge tone="completed">Valid handle</Badge>
-              <h3>{object.label}</h3>
+              <Badge tone="completed">유효한 Handle</Badge>
+              <h3>{displayLabel(object.label)}</h3>
             </div>
             <dl className="object-facts">
               <div>
-                <dt>Slot index</dt>
+                <dt>슬롯 번호</dt>
                 <dd>{object.handle.index}</dd>
               </div>
               <div>
-                <dt>Generation</dt>
+                <dt>Generation · 세대</dt>
                 <dd>{object.handle.generation}</dd>
               </div>
               <div>
                 <dt>Root</dt>
-                <dd>{object.root ? "Yes · protected" : "No"}</dd>
+                <dd>{object.root ? "예 · 보존됨" : "아니요"}</dd>
               </div>
               <div>
-                <dt>Reachable</dt>
+                <dt>Root에서 도달 가능</dt>
                 <dd className={object.reachable ? "green-text" : "amber-text"}>
-                  {object.reachable ? "Yes" : "No · GC candidate"}
+                  {object.reachable ? "예" : "아니요 · GC 회수 대상"}
                 </dd>
               </div>
               <div>
-                <dt>Marked last collection</dt>
-                <dd>{object.marked ? "Yes" : "No"}</dd>
+                <dt>최근 GC의 Mark 여부</dt>
+                <dd>{object.marked ? "예" : "아니요"}</dd>
               </div>
             </dl>
             <div className="strong-ref-heading">
-              STRONG REFERENCES <span>{object.references.length}</span>
+              강한 참조 <span>{object.references.length}</span>
             </div>
             <div className="strong-ref-list">
               {object.references.length ? (
@@ -1033,7 +1053,7 @@ function ObjectInspector({
                 ))
               ) : (
                 <p className="field-help">
-                  This object has no outgoing references.
+                  이 객체가 참조하는 다른 객체는 없습니다.
                 </p>
               )}
             </div>
@@ -1046,19 +1066,20 @@ function ObjectInspector({
             <span className="stale-icon">
               <Icon name="close" size={20} />
             </span>
-            <h3>Invalid or stale handle</h3>
+            <h3>유효하지 않거나 회수된 Handle</h3>
             <p>
-              {inspection?.error ??
-                "This handle no longer resolves to a live object."}
+              {inspection?.error
+                ? errorText(inspection.error)
+                : "이 Handle에 해당하는 객체가 남아 있지 않습니다."}
             </p>
             <code>{handleId(handle)}</code>
             <p className="field-help">
-              Collection frees the slot. A new allocation uses a different
-              generation, so an old handle cannot access its replacement.
+              회수한 슬롯을 재사용할 때는 Generation이 달라집니다. 이전 Handle로
+              새 객체에 접근할 수 없습니다.
             </p>
             {lastKnown && (
               <details>
-                <summary>Last observed snapshot</summary>
+                <summary>마지막으로 관찰한 상태</summary>
                 <JsonBlock value={lastKnown} />
               </details>
             )}
@@ -1067,7 +1088,7 @@ function ObjectInspector({
       </div>
       <div className="object-inspector-foot">
         <Icon name="info" size={14} />
-        Inspecting an object does not pin it.
+        조회만으로 객체가 보존되지는 않습니다.
       </div>
     </aside>
   );
@@ -1094,7 +1115,9 @@ function ObjectNodeCard({ data, selected }: NodeProps<ObjectNode>) {
           </span>
         )}
       </div>
-      <strong title={object.label}>{object.label}</strong>
+      <strong title={displayLabel(object.label)}>
+        {displayLabel(object.label)}
+      </strong>
       <code>{handleId(object.handle)}</code>
       <FlowHandle type="source" position={Position.Right} />
     </div>
@@ -1162,6 +1185,7 @@ function ReferenceCanvas({
   }, [graph, selected]);
   return (
     <ReactFlow
+      ariaLabelConfig={canvasLabels}
       nodes={nodes}
       edges={edges}
       nodeTypes={objectNodeTypes}
@@ -1170,8 +1194,8 @@ function ReferenceCanvas({
       nodesDraggable={false}
       deleteKeyCode={null}
       fitView
-      fitViewOptions={{ padding: 0.15, maxZoom: 1 }}
-      minZoom={0.07}
+      fitViewOptions={{ padding: 0.15, minZoom: 0.85, maxZoom: 1 }}
+      minZoom={0.25}
       maxZoom={1.8}
       colorMode="dark"
     >

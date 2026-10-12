@@ -1,6 +1,8 @@
+import { displayLabel, errorText } from "./labels";
 import { useCallback, useEffect, useRef, useState } from "react";
 import "@xyflow/react/dist/style.css";
 import "./styles/app.css";
+import "./styles/readability.css";
 import { createEngine, type EngineClient } from "./engine";
 import { templates } from "./templates";
 import type {
@@ -83,11 +85,11 @@ function readDraft(): { workflow: Workflow; input: string; restored: boolean } {
 function parseInput(text: string): Record<string, unknown> {
   const parsed: unknown = JSON.parse(text);
   if (parsed == null || typeof parsed !== "object" || Array.isArray(parsed))
-    throw new Error("Event input must be a JSON object.");
+    throw new Error("입력 데이터는 JSON 객체여야 합니다.");
   return parsed as Record<string, unknown>;
 }
 const message = (error: unknown) =>
-  error instanceof Error ? error.message : String(error);
+  errorText(error instanceof Error ? error.message : String(error));
 
 export default function App() {
   const [draft] = useState(readDraft);
@@ -112,7 +114,7 @@ export default function App() {
     null,
   );
   const [saveStatus, setSaveStatus] = useState(
-    draft.restored ? "Restored locally" : "Saved locally",
+    draft.restored ? "저장한 편집 내용 복원됨" : "브라우저에 저장됨",
   );
   const speedRef = useRef(1);
   const continuousRef = useRef({
@@ -182,13 +184,13 @@ export default function App() {
     speedRef.current = speed;
   }, [speed]);
   useEffect(() => {
-    setSaveStatus("Saving…");
+    setSaveStatus("저장 중…");
     const timer = window.setTimeout(() => {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({ workflow, input }));
-        setSaveStatus("Saved locally");
+        setSaveStatus("브라우저에 저장됨");
       } catch {
-        setSaveStatus("Local save unavailable");
+        setSaveStatus("브라우저 저장 불가");
       }
     }, 350);
     return () => window.clearTimeout(timer);
@@ -286,7 +288,7 @@ export default function App() {
     }
   };
   const prepareRun = () => {
-    if (!engine) throw new Error("The Rust/WASM runtime is still loading.");
+    if (!engine) throw new Error("Rust/WASM 엔진을 불러오는 중입니다.");
     const result = engine.request<Validation>({ op: "validate", workflow });
     setValidation(result);
     if (!result.valid) throw new Error(result.errors.join(" "));
@@ -306,8 +308,8 @@ export default function App() {
       setNotice({
         text:
           count === 1
-            ? `Execution #${last?.id} started.`
-            : `${count} executions started with the current input.`,
+            ? `Run #${last?.id}을 시작했습니다.`
+            : `현재 입력으로 Run ${count}개를 시작했습니다.`,
         error: false,
       });
     } catch (error) {
@@ -334,7 +336,7 @@ export default function App() {
       pausedRef.current = false;
       refresh();
       setNotice({
-        text: "Continuous execution: one event every virtual second. Input and workflow are captured when enabled.",
+        text: "가상 시간 1초마다 반복 실행합니다. 시작 시점의 입력과 Workflow를 사용합니다.",
         error: false,
       });
     } catch (error) {
@@ -351,7 +353,7 @@ export default function App() {
       setSelectedHandle(null);
       setDiagnosticsEpoch((value) => value + 1);
       setNotice({
-        text: "Runtime reset. Your workflow and event input are preserved.",
+        text: "실행을 초기화했습니다. 편집한 Workflow와 입력은 유지됩니다.",
         error: false,
       });
     }
@@ -370,8 +372,8 @@ export default function App() {
       setValidation(result);
       setNotice({
         text: result.valid
-          ? "Workflow validated. All paths lead to an output."
-          : `${result.errors.length} validation issue${result.errors.length === 1 ? "" : "s"} to resolve.`,
+          ? "검증을 통과했습니다. 모든 경로가 Output에 연결되어 있습니다."
+          : `검증 오류 ${result.errors.length}개를 확인하세요.`,
         error: !result.valid,
       });
     } catch (error) {
@@ -400,7 +402,7 @@ export default function App() {
             event.preventDefault();
             setPage("studio");
           }}
-          aria-label="FlowRuntime home"
+          aria-label="FlowRuntime 홈"
         >
           <span className="brand-mark">
             <Icon name="workflow" size={23} />
@@ -409,22 +411,22 @@ export default function App() {
             FlowRuntime<span className="brand-dot">.</span>
           </span>
         </a>
-        <nav className="main-nav" aria-label="Main navigation">
+        <nav className="main-nav" aria-label="주 메뉴">
           <button
             className={page === "studio" ? "active" : ""}
             onClick={() => setPage("studio")}
-            aria-label="Workflow Studio"
+            aria-label="Workflow 편집"
           >
             <Icon name="workflow" size={16} />
-            Workflow Studio
+            Workflow 편집
           </button>
           <button
             className={page === "monitor" ? "active" : ""}
             onClick={() => setPage("monitor")}
-            aria-label="Execution Monitor"
+            aria-label="실행 결과"
           >
             <Icon name="activity" size={16} />
-            Executions
+            실행 결과
             {state && state.active_runs > 0 && (
               <span className="nav-count">{state.active_runs}</span>
             )}
@@ -432,10 +434,10 @@ export default function App() {
           <button
             className={page === "developer" ? "active" : ""}
             onClick={() => setPage("developer")}
-            aria-label="Developer Tools"
+            aria-label="개발자 도구"
           >
             <Icon name="code" size={16} />
-            Developer Tools
+            개발자 도구
           </button>
         </nav>
         <div className="header-runtime">
@@ -446,12 +448,12 @@ export default function App() {
             {engine
               ? "Rust / WASM"
               : loadingError
-                ? "Runtime error"
-                : "Loading WASM"}
+                ? "Runtime 오류"
+                : "WASM 로딩 중"}
           </span>
           <span className="local-mode">
             <Icon name="cpu" size={14} />
-            Local-first
+            브라우저에서 실행
           </span>
         </div>
       </header>
@@ -462,15 +464,13 @@ export default function App() {
           </span>
           <h1>
             {loadingError
-              ? "The runtime could not start"
-              : "Preparing your workspace"}
+              ? "실행 엔진을 시작하지 못했습니다"
+              : "작업 공간을 준비하고 있습니다"}
           </h1>
-          <p>
-            {loadingError ?? "Loading the Rust/WebAssembly execution engine…"}
-          </p>
+          <p>{loadingError ?? "Rust/WASM 실행 엔진을 불러오고 있습니다…"}</p>
           {loadingError && (
             <button className="button" onClick={() => window.location.reload()}>
-              Retry loading
+              다시 불러오기
             </button>
           )}
         </main>
@@ -480,38 +480,84 @@ export default function App() {
             <div className="workspace-title">
               <div className="eyebrow">
                 {page === "studio"
-                  ? "BUILD & EXECUTE"
+                  ? "1. 구성하고 실행하기"
                   : page === "monitor"
-                    ? "OBSERVE & INSPECT"
-                    : "EXPLORE THE RUNTIME"}
+                    ? "2. 실행 결과 확인하기"
+                    : "3. 내부 동작 살펴보기"}
               </div>
               <div>
                 <h1>
                   {page === "studio"
-                    ? workflow.name
+                    ? displayLabel(workflow.name)
                     : page === "monitor"
-                      ? "Execution monitor"
-                      : "Developer tools"}
+                      ? "실행 결과"
+                      : "개발자 도구"}
                 </h1>
                 {page === "studio" && (
                   <Badge tone={validation?.valid ? "completed" : "neutral"}>
                     {validation?.valid
-                      ? "Ready"
+                      ? "실행 준비 완료"
                       : validation
-                        ? "Needs attention"
-                        : "Checking"}
+                        ? "확인 필요"
+                        : "검증 중"}
                   </Badge>
                 )}
               </div>
               <p>
                 {page === "studio"
-                  ? "Turn events into outcomes. One connected step at a time."
+                  ? "템플릿을 고르고 실행해 보세요. 노드를 누르면 처리 규칙을 바꿀 수 있습니다."
                   : page === "monitor"
-                    ? "Every input, every step, every result — in one place."
-                    : "Inspect the real heap, collector, and reference graph behind your runs."}
+                    ? "Run 하나가 실행 한 번입니다. 왼쪽에서 Run을 고르면 처리 순서와 결과를 확인할 수 있습니다."
+                    : "실행 중 생성된 객체와 GC의 회수 결과를 확인합니다. 일반 실행에는 이 화면을 사용할 필요가 없습니다."}
               </p>
             </div>
             <div className="primary-actions">
+              <button
+                className="button button-primary run-button"
+                onClick={() => run()}
+                disabled={!!inputError || !validation?.valid}
+                aria-label="실행하기"
+              >
+                <Icon name="play" size={16} />
+                실행하기<span className="button-shortcut">▶</span>
+              </button>
+            </div>
+          </div>
+          <div className="quick-guide" role="note">
+            {page === "studio" ? (
+              <>
+                <strong>처음이라면 이렇게 해보세요</strong>
+                <span>① 템플릿 선택</span>
+                <span>② 입력 데이터 확인</span>
+                <span>③ 실행하기 → 결과 확인</span>
+              </>
+            ) : page === "monitor" ? (
+              <>
+                <strong>확인할 곳</strong>
+                <span>Task 처리 순서: 어떤 경로를 지났는지</span>
+                <span>최종 결과: 입력이 어떻게 바뀌었는지</span>
+              </>
+            ) : (
+              <>
+                <strong>필요한 화면만 선택하세요</strong>
+                <span>Heap: 남아 있는 객체</span>
+                <span>GC: 회수 전후 비교</span>
+                <span>References: 객체 사이의 연결</span>
+              </>
+            )}
+          </div>
+          <details className="advanced-controls">
+            <summary>
+              반복 실행·시간 제어{" "}
+              {continuous && <span className="green-text">반복 실행 중</span>}{" "}
+              {state.paused && <span>일시 정지 중</span>}
+            </summary>
+            <p className="advanced-help">
+              Delay를 관찰할 때는 일시 정지 후 Step으로 시간을 진행하세요. 20회
+              실행·반복 실행은 Heap과 GC의 변화를 볼 때 사용합니다.
+            </p>
+            <div className="secondary-actions">
+              {" "}
               <button
                 className={`button continuous-button ${continuous ? "button-pinned" : ""}`}
                 onClick={toggleContinuous}
@@ -519,100 +565,89 @@ export default function App() {
                 aria-pressed={continuous}
               >
                 <Icon name={continuous ? "stop" : "reset"} size={15} />
-                {continuous ? "Stop continuous" : "Continuous"}
+                {continuous ? "반복 실행 중지" : "반복 실행"}
               </button>
               <button
                 className="button"
                 onClick={() => run(20, false)}
                 disabled={!!inputError || !validation?.valid}
-                title="Start 20 runs with the current input"
+                title="현재 입력으로 Run 20개 시작"
               >
                 <Icon name="bolt" size={15} />
-                Burst ×20
-              </button>
-              <button
-                className="button button-primary run-button"
-                onClick={() => run()}
-                disabled={!!inputError || !validation?.valid}
-                aria-label="Run workflow"
-              >
-                <Icon name="play" size={16} />
-                Run workflow<span className="button-shortcut">▶</span>
+                20회 실행
               </button>
             </div>
-          </div>
-          <div className="execution-controlbar">
-            <div className="scheduler-controls">
-              <span
-                className={`scheduler-status ${state.paused ? "paused" : ""}`}
-              >
-                <span className="status-light" />
-                {state.paused ? "Paused" : "Runtime running"}
-              </span>
-              <span className="toolbar-separator" />
-              <button
-                className="icon-button"
-                onClick={() =>
-                  command({ op: state.paused ? "resume" : "pause" })
-                }
-                title={state.paused ? "Resume execution" : "Pause execution"}
-                aria-label={
-                  state.paused ? "Resume execution" : "Pause execution"
-                }
-              >
-                <Icon name={state.paused ? "play" : "pause"} size={16} />
-              </button>
-              <button
-                className="button button-ghost button-small"
-                onClick={() => command({ op: "step", delta_ms: 100 })}
-                aria-label="Step +100 ms"
-              >
-                <Icon name="step" size={15} />
-                Step<span>+100 ms</span>
-              </button>
-              <label className="speed-control">
-                <span>Speed</span>
-                <select
-                  aria-label="Execution speed"
-                  value={speed}
-                  onChange={(event) => setSpeed(Number(event.target.value))}
+            <div className="execution-controlbar">
+              <div className="scheduler-controls">
+                <span
+                  className={`scheduler-status ${state.paused ? "paused" : ""}`}
                 >
-                  {[0.5, 1, 2, 5, 10].map((value) => (
-                    <option key={value} value={value}>
-                      {value}×
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <span className="virtual-time">
-                <Icon name="clock" size={14} />
-                <code>{duration(state.now_ms)}</code>
-                <span>virtual</span>
-              </span>
-            </div>
-            <div className="runtime-reset-controls">
-              <button
-                className="text-button muted"
-                onClick={() => {
-                  if (command({ op: "clear_diagnostics" })) {
-                    setSamples([]);
-                    setDiagnosticsEpoch((value) => value + 1);
-                    setNotice({
-                      text: "Expired diagnostic history cleared. Active, pinned, and retained runs remain protected.",
-                      error: false,
-                    });
+                  <span className="status-light" />
+                  {state.paused ? "일시 정지" : "시간 진행 중"}
+                </span>
+                <span className="toolbar-separator" />
+                <button
+                  className="icon-button"
+                  onClick={() =>
+                    command({ op: state.paused ? "resume" : "pause" })
                   }
-                }}
-              >
-                <Icon name="trash" size={13} />
-                Clear diagnostics
-              </button>
-              <button className="text-button muted" onClick={resetRuntime}>
-                <Icon name="reset" size={13} />
-                Reset runtime
-              </button>
+                  title={state.paused ? "계속 실행" : "일시 정지"}
+                  aria-label={state.paused ? "계속 실행" : "일시 정지"}
+                >
+                  <Icon name={state.paused ? "play" : "pause"} size={16} />
+                </button>
+                <button
+                  className="button button-ghost button-small"
+                  onClick={() => command({ op: "step", delta_ms: 100 })}
+                  aria-label="Step +100 ms"
+                >
+                  <Icon name="step" size={15} />
+                  Step<span>+100 ms</span>
+                </button>
+                <label className="speed-control">
+                  <span>속도</span>
+                  <select
+                    aria-label="실행 속도"
+                    value={speed}
+                    onChange={(event) => setSpeed(Number(event.target.value))}
+                  >
+                    {[0.5, 1, 2, 5, 10].map((value) => (
+                      <option key={value} value={value}>
+                        {value}×
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <span className="virtual-time">
+                  <Icon name="clock" size={14} />
+                  <code>{duration(state.now_ms)}</code>
+                  <span>가상 시간</span>
+                </span>
+              </div>
+              <div className="runtime-reset-controls">
+                <button
+                  className="text-button muted"
+                  onClick={() => {
+                    if (command({ op: "clear_diagnostics" })) {
+                      setSamples([]);
+                      setDiagnosticsEpoch((value) => value + 1);
+                      setNotice({
+                        text: "진단 기록을 지웠습니다. 실행 중이거나 보존 중인 Run과 Pin한 Run은 유지됩니다.",
+                        error: false,
+                      });
+                    }
+                  }}
+                >
+                  <Icon name="trash" size={13} />
+                  진단 기록 지우기
+                </button>
+                <button className="text-button muted" onClick={resetRuntime}>
+                  <Icon name="reset" size={13} />
+                  실행 초기화
+                </button>
+              </div>
             </div>
-          </div>
+          </details>
           {notice && (
             <div
               className={`notice ${notice.error ? "notice-error" : "notice-success"}`}
@@ -623,7 +658,7 @@ export default function App() {
               <button
                 className="icon-button"
                 onClick={() => setNotice(null)}
-                aria-label="Dismiss notification"
+                aria-label="알림 닫기"
               >
                 <Icon name="close" size={14} />
               </button>
@@ -683,17 +718,17 @@ export default function App() {
           <footer className="runtime-footer">
             <div className="footer-runtime">
               <Icon name="cpu" size={14} />
-              <strong>Engine connected</strong>
+              <strong>엔진 연결됨</strong>
               <span className="dot-separator">·</span>
-              <span>Everything runs in your browser</span>
+              <span>모든 실행은 이 브라우저 안에서 처리됩니다</span>
             </div>
             <div className="footer-metrics">
               <span>
                 <i className="small-dot" />
-                {number(state.active_runs)} active
+                실행 중 {number(state.active_runs)}개
               </span>
-              <span>{number(state.heap.live_objects)} objects</span>
-              <span>{number(state.gc.cycles)} GC cycles</span>
+              <span>객체 {number(state.heap.live_objects)}개</span>
+              <span>GC {number(state.gc.cycles)}회</span>
               <span>{bytes(memoryBytes)} WASM</span>
               {latestRun && (
                 <button
@@ -703,7 +738,7 @@ export default function App() {
                     setPage("monitor");
                   }}
                 >
-                  Latest #{latestRun.id}
+                  최근 Run #{latestRun.id}
                   <Icon name="arrow" size={12} />
                 </button>
               )}

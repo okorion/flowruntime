@@ -1,3 +1,4 @@
+import { displayLabel, statusLabel, errorText } from "../labels";
 import { useEffect, useState } from "react";
 import type { EngineClient } from "../engine";
 import type {
@@ -52,7 +53,9 @@ export function Monitor({
       setDetailError(null);
     } catch (error) {
       setDetail(null);
-      setDetailError(error instanceof Error ? error.message : String(error));
+      setDetailError(
+        errorText(error instanceof Error ? error.message : String(error)),
+      );
     }
   }, [engine, selectedRun, state]);
   useEffect(() => {
@@ -67,26 +70,26 @@ export function Monitor({
       <aside className="run-list-panel">
         <div className="run-list-heading">
           <div>
-            <h2>Executions</h2>
-            <span>{number(state.runs.length)} recent runs</span>
+            <h2>실행 목록</h2>
+            <span>최근 Run {number(state.runs.length)}개</span>
           </div>
           <Icon name="activity" size={20} />
         </div>
         <div className="run-filter">
           <label className="sr-only" htmlFor="run-status-filter">
-            Filter runs
+            Run 상태 필터
           </label>
           <select
             id="run-status-filter"
             value={filter}
             onChange={(event) => setFilter(event.target.value)}
           >
-            <option value="all">All statuses</option>
-            <option value="running">Running</option>
-            <option value="waiting">Waiting</option>
-            <option value="completed">Completed</option>
-            <option value="failed">Failed</option>
-            <option value="cancelled">Cancelled</option>
+            <option value="all">모든 상태</option>
+            <option value="running">실행 중</option>
+            <option value="waiting">대기 중</option>
+            <option value="completed">완료</option>
+            <option value="failed">실패</option>
+            <option value="cancelled">취소</option>
           </select>
           <span>{runs.length}</span>
         </div>
@@ -103,14 +106,14 @@ export function Monitor({
           ) : (
             <div className="run-list-empty">
               {filter === "all"
-                ? "Your executions will appear here."
-                : "No executions with this status."}
+                ? "실행하면 Run 목록이 여기에 나타납니다."
+                : "이 상태의 Run이 없습니다."}
             </div>
           )}
         </div>
         <div className="run-list-footer">
           <Icon name="info" size={13} />
-          History is bounded to {state.limits.history_limit} runs.
+          완료 기록은 최근 {state.limits.history_limit}개까지 보관합니다.
         </div>
       </aside>
       <section className="execution-detail">
@@ -119,37 +122,39 @@ export function Monitor({
             icon="activity"
             title={
               detailError
-                ? "Execution no longer available"
-                : "Your next execution starts here"
+                ? "실행 상세를 불러올 수 없습니다"
+                : "첫 실행을 시작해 보세요"
             }
             action={
               <button className="button button-primary" onClick={onRun}>
                 <Icon name="play" size={15} />
-                Run workflow
+                실행하기
               </button>
             }
           >
             {detailError ??
-              "Run your workflow to follow each task, inspect the result, and trace its runtime objects."}
+              "실행하기를 누르면 Task의 처리 순서와 결과가 표시됩니다."}
           </Empty>
         ) : (
           <>
             <div className="execution-heading">
               <div>
-                <div className="eyebrow">EXECUTION DETAILS</div>
+                <div className="eyebrow">선택한 Run</div>
                 <h2>
-                  {detail.name}{" "}
+                  {displayLabel(detail.name)}{" "}
                   <span>#{String(detail.id).padStart(4, "0")}</span>
                 </h2>
                 <div className="execution-subline">
-                  <Badge tone={detail.status}>{detail.status}</Badge>
+                  <Badge tone={statusLabel(detail.status)}>
+                    {statusLabel(detail.status)}
+                  </Badge>
                   <span>
                     {duration(
                       (detail.completed_at ?? state.now_ms) - detail.started_at,
                     )}
                   </span>
                   <span className="dot-separator">·</span>
-                  <span>{detail.tasks.length} tasks</span>
+                  <span>Task {detail.tasks.length}개</span>
                 </div>
               </div>
               <div className="execution-actions">
@@ -163,17 +168,19 @@ export function Monitor({
                       pinned: !detail.pinned,
                     })
                   }
-                  aria-label={detail.pinned ? "Unpin run" : "Pin run"}
+                  aria-label={
+                    detail.pinned ? "Run 보존 해제" : "Run 보존 (Pin)"
+                  }
                 >
                   <Icon name="pin" size={14} />
-                  {detail.pinned ? "Pinned" : "Pin run"}
+                  {detail.pinned ? "보존 중 (Pin)" : "Run 보존 (Pin)"}
                 </button>
                 <button
                   className="button button-small"
                   onClick={() => onTrace(detail.handle, detail.id)}
                 >
                   <Icon name="search" size={14} />
-                  Trace run
+                  객체 참조 보기
                 </button>
                 {(detail.status === "running" ||
                   detail.status === "waiting") && (
@@ -184,48 +191,51 @@ export function Monitor({
                     }
                   >
                     <Icon name="stop" size={14} />
-                    Cancel run
+                    Run 취소
                   </button>
                 )}
               </div>
             </div>
-            <div className="execution-metadata">
-              <div>
-                <span>STARTED AT</span>
-                <strong>
-                  {duration(detail.started_at)} <small>virtual</small>
-                </strong>
+            <details className="run-metadata">
+              <summary>실행 상세 · 시작 시각과 보존 상태</summary>
+              <div className="execution-metadata">
+                <div>
+                  <span>시작 시각</span>
+                  <strong>
+                    {duration(detail.started_at)} <small>가상 시간</small>
+                  </strong>
+                </div>
+                <div>
+                  <span>Run Handle</span>
+                  <code>{handleId(detail.handle)}</code>
+                </div>
+                <div>
+                  <span>객체 보존 상태</span>
+                  <strong>
+                    {detail.pinned
+                      ? "Pin으로 보존"
+                      : detail.collected
+                        ? "회수됨"
+                        : detail.retained
+                          ? "보존 기간 내"
+                          : "Root에서 해제됨"}
+                  </strong>
+                </div>
+                <div>
+                  <span>시작 시점의 Workflow</span>
+                  <strong>
+                    노드 {detail.workflow.nodes.length}개 · Edge{" "}
+                    {detail.workflow.edges.length}개
+                  </strong>
+                </div>
               </div>
-              <div>
-                <span>RUN HANDLE</span>
-                <code>{handleId(detail.handle)}</code>
-              </div>
-              <div>
-                <span>OBJECT LIFETIME</span>
-                <strong>
-                  {detail.pinned
-                    ? "Pinned root"
-                    : detail.collected
-                      ? "Collected"
-                      : detail.retained
-                        ? "Retention window"
-                        : "Released from roots"}
-                </strong>
-              </div>
-              <div>
-                <span>WORKFLOW SNAPSHOT</span>
-                <strong>
-                  {detail.workflow.nodes.length} nodes ·{" "}
-                  {detail.workflow.edges.length} edges
-                </strong>
-              </div>
-            </div>
+            </details>
             {detail.error && (
               <div className="execution-error" role="alert">
                 <Icon name="info" size={18} />
                 <div>
-                  <strong>Execution failed</strong>
-                  <p>{detail.error}</p>
+                  <strong>실행 실패</strong>
+                  <p>{errorText(detail.error)}</p>
                 </div>
               </div>
             )}
@@ -235,22 +245,21 @@ export function Monitor({
                 onClick={() => setView("timeline")}
               >
                 <Icon name="activity" size={15} />
-                Task timeline
+                Task 처리 순서
               </button>
               <button
                 className={view === "workflow" ? "active" : ""}
                 onClick={() => setView("workflow")}
               >
                 <Icon name="workflow" size={15} />
-                Workflow snapshot
+                실행한 Workflow
               </button>
             </div>
             {view === "workflow" ? (
               <div className="snapshot-view">
                 <div className="snapshot-note">
-                  <Icon name="info" size={14} />
-                  The definition captured when this run started. Subsequent
-                  edits apply to new runs.
+                  <Icon name="info" size={14} />이 Run이 시작될 때의 정의입니다.
+                  이후 편집은 새 Run부터 적용됩니다.
                 </div>
                 <div className="snapshot-canvas">
                   <WorkflowCanvas
@@ -266,8 +275,8 @@ export function Monitor({
               <div className="execution-content">
                 <section className="timeline-panel">
                   <div className="panel-title">
-                    <h3>Task timeline</h3>
-                    <span>Virtual execution order</span>
+                    <h3>Task 처리 순서</h3>
+                    <span>가상 시간 기준</span>
                   </div>
                   <div className="timeline" data-testid="task-timeline">
                     {detail.tasks.map((item, index) => (
@@ -287,10 +296,10 @@ export function Monitor({
                     <div className="waiting-note">
                       <Icon name="clock" size={17} />
                       <span>
-                        A continuation is waiting in the scheduler.{" "}
+                        Continuation이 스케줄러에서 대기 중입니다.{" "}
                         {state.paused
-                          ? "Resume or step to advance virtual time."
-                          : "The next task resumes when its delay expires."}
+                          ? "계속 실행하거나 Step으로 시간을 진행하세요."
+                          : "Delay가 끝나면 다음 Task로 진행합니다."}
                       </span>
                     </div>
                   )}
@@ -299,36 +308,38 @@ export function Monitor({
                   {task ? (
                     <>
                       <div className="panel-title">
-                        <h3>{task.label}</h3>
+                        <h3>{displayLabel(task.label)}</h3>
                         <button
                           className="icon-button"
-                          aria-label="Show run result"
+                          aria-label="Run 결과 보기"
                           onClick={() => setSelectedTask(null)}
                         >
                           <Icon name="close" size={14} />
                         </button>
                       </div>
-                      <Badge tone={task.status}>{task.status}</Badge>
+                      <Badge tone={statusLabel(task.status)}>
+                        {statusLabel(task.status)}
+                      </Badge>
                       <div className="task-handle">
-                        Task handle <code>{handleId(task.handle)}</code>
+                        Task Handle <code>{handleId(task.handle)}</code>
                       </div>
-                      <JsonBlock title="TASK INPUT" value={task.input} />
-                      <JsonBlock title="TASK OUTPUT" value={task.output} />
+                      <JsonBlock title="Task 입력" value={task.input} />
+                      <JsonBlock title="Task 출력" value={task.output} />
                       {task.error && (
-                        <p className="field-error">{task.error}</p>
+                        <p className="field-error">{errorText(task.error)}</p>
                       )}
                       <button
                         className="button button-small"
                         onClick={() => onTrace(task.handle, detail.id)}
                       >
                         <Icon name="search" size={14} />
-                        Trace selected task
+                        선택한 Task 참조 보기
                       </button>
                     </>
                   ) : (
                     <>
                       <div className="panel-title">
-                        <h3>Execution result</h3>
+                        <h3>최종 결과</h3>
                         <span className="code-tag">JSON</span>
                       </div>
                       <div data-testid="run-result">
@@ -337,28 +348,28 @@ export function Monitor({
                       {detail.result === null && (
                         <p className="field-help">
                           {detail.status === "failed"
-                            ? "The run stopped before producing a result."
+                            ? "결과를 만들기 전에 실행이 중단됐습니다."
                             : detail.status === "cancelled"
-                              ? "This execution was cancelled."
-                              : "The final output will appear when the run completes."}
+                              ? "취소된 실행입니다."
+                              : "Run이 완료되면 최종 결과가 표시됩니다."}
                         </p>
                       )}
                       <div className="result-footnote">
                         <Icon name="check" size={14} />
-                        <span>Produced by the Rust/WASM runtime</span>
+                        <span>Rust/WASM 엔진이 생성한 결과</span>
                       </div>
                       <div className="run-inspection-help">
                         <Icon name="layers" size={19} />
-                        <h4>Follow the objects</h4>
+                        <h4>내부 객체가 궁금하다면</h4>
                         <p>
-                          Trace this run to see its tasks, values, and strong
-                          references in Developer Tools.
+                          개발자 도구에서 이 Run의 Task·Value와 참조 관계를 볼
+                          수 있습니다.
                         </p>
                         <button
                           className="text-button"
                           onClick={() => onTrace(detail.handle, detail.id)}
                         >
-                          Explore references
+                          참조 관계 보기
                           <Icon name="arrow" size={14} />
                         </button>
                       </div>
@@ -390,7 +401,7 @@ function RunListItem({
       aria-label={`Run #${run.id}`}
     >
       <div className="run-item-top">
-        <span className={`run-status-icon status-${run.status}`}>
+        <span className={`run-status-icon status-${statusLabel(run.status)}`}>
           <Icon
             name={
               run.status === "completed"
@@ -406,15 +417,15 @@ function RunListItem({
             size={14}
           />
         </span>
-        <strong>{run.name}</strong>
+        <strong>{displayLabel(run.name)}</strong>
         {run.pinned && <Icon name="pin" size={12} />}
         <span className="run-id">#{String(run.id).padStart(4, "0")}</span>
       </div>
       <div className="run-item-bottom">
-        <span>{run.status}</span>
+        <span>{statusLabel(run.status)}</span>
         <span>
           {duration(run.started_at)} <span className="dot-separator">·</span>
-          {run.task_count} tasks
+          Task {run.task_count}개
         </span>
       </div>
     </button>
@@ -441,7 +452,7 @@ function TaskRow({
   return (
     <div className={`timeline-row ${selected ? "selected" : ""}`}>
       <div className="timeline-track">
-        <span className={`timeline-dot status-${task.status}`}>
+        <span className={`timeline-dot status-${statusLabel(task.status)}`}>
           <Icon
             name={
               task.status === "completed"
@@ -459,7 +470,7 @@ function TaskRow({
       </div>
       <button className="timeline-task" onClick={onSelect}>
         <div className="timeline-task-top">
-          <strong>{task.label}</strong>
+          <strong>{displayLabel(task.label)}</strong>
           <span>{duration((task.completed_at ?? now) - task.started_at)}</span>
         </div>
         <div className="timeline-task-bottom">
@@ -468,22 +479,22 @@ function TaskRow({
             <span className="dot-separator">·</span>
             {task.kind}
           </span>
-          <span className={`status-text status-${task.status}`}>
-            {task.status}
+          <span className={`status-text status-${statusLabel(task.status)}`}>
+            {statusLabel(task.status)}
           </span>
         </div>
         <div className="timeline-time">
           +{duration(task.started_at - runStart)}
           {task.completed_at != null
             ? ` → +${duration(task.completed_at - runStart)}`
-            : " → pending"}
+            : " → 대기 중"}
         </div>
-        {task.error && <p className="field-error">{task.error}</p>}
+        {task.error && <p className="field-error">{errorText(task.error)}</p>}
       </button>
       <button
         className="icon-button timeline-trace"
-        aria-label={`Trace task ${task.label}`}
-        title="Trace task object"
+        aria-label={`${displayLabel(task.label)} Task 참조 보기`}
+        title="Task 객체 참조 보기"
         onClick={onTrace}
       >
         <Icon name="search" size={14} />

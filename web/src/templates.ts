@@ -32,9 +32,8 @@ const edge = (source: string, target: string, branch?: "true" | "false") => ({
 export const templates: WorkflowTemplate[] = [
   {
     id: "order-routing",
-    name: "Order Routing",
-    description:
-      "Route orders by value. Approve the everyday. Review the exceptional.",
+    name: "주문 분류",
+    description: "주문 금액에 따라 자동 승인 또는 수동 검토로 분류합니다.",
     input: {
       order_id: "ORD-1042",
       customer: "Alex Morgan",
@@ -43,28 +42,28 @@ export const templates: WorkflowTemplate[] = [
     },
     workflow: {
       id: "order-routing",
-      name: "Order Routing",
+      name: "주문 분류",
       nodes: [
-        node("new-order", "New order", "trigger", 300, 0),
-        node("normalize", "Validate order", "transform", 300, 125, {
+        node("new-order", "주문 입력", "trigger", 300, 0),
+        node("normalize", "검증 상태 추가", "transform", 300, 125, {
           field: "validated",
           value: true,
         }),
-        node("check-amount", "Check amount", "condition", 300, 250, {
+        node("check-amount", "주문 금액 비교", "condition", 300, 250, {
           field: "amount",
           operator: "gte",
           value: 1000,
         }),
-        node("manual-review", "Manual review", "transform", 80, 400, {
+        node("manual-review", "수동 검토로 분류", "transform", 80, 400, {
           field: "decision",
           value: "manual_review",
         }),
-        node("auto-approve", "Auto approve", "transform", 520, 400, {
+        node("auto-approve", "자동 승인으로 분류", "transform", 520, 400, {
           field: "decision",
           value: "approved",
         }),
-        node("review-result", "Review result", "output", 80, 535),
-        node("approval-result", "Approval result", "output", 520, 535),
+        node("review-result", "검토 결과", "output", 80, 535),
+        node("approval-result", "승인 결과", "output", 520, 535),
       ],
       edges: [
         edge("new-order", "normalize"),
@@ -78,36 +77,36 @@ export const templates: WorkflowTemplate[] = [
   },
   {
     id: "incident-triage",
-    name: "Incident Triage",
+    name: "장애 분류",
     description:
-      "Classify an incident, capture a continuation, and resume after a delay.",
+      "장애 심각도에 따라 담당자를 정하고 Delay 뒤 결과를 확인합니다.",
     input: { incident_id: "INC-087", service: "checkout", severity: 4 },
     workflow: {
       id: "incident-triage",
-      name: "Incident Triage",
+      name: "장애 분류",
       nodes: [
-        node("incident", "Incident received", "trigger", 300, 0),
-        node("severity", "Check severity", "condition", 300, 125, {
+        node("incident", "장애 입력", "trigger", 300, 0),
+        node("severity", "심각도 비교", "condition", 300, 125, {
           field: "severity",
           operator: "gte",
           value: 3,
         }),
-        node("oncall", "Assign on-call", "transform", 80, 270, {
+        node("oncall", "당직 담당자 지정", "transform", 80, 270, {
           field: "owner",
           value: "on-call",
         }),
-        node("backlog", "Assign support", "transform", 520, 270, {
+        node("backlog", "지원 담당자 지정", "transform", 520, 270, {
           field: "owner",
           value: "support",
         }),
-        node("escalation", "Escalation window", "delay", 80, 410, {
+        node("escalation", "보고 전 대기", "delay", 80, 410, {
           duration_ms: 3000,
         }),
-        node("review-window", "Review window", "delay", 520, 410, {
+        node("review-window", "검토 전 대기", "delay", 520, 410, {
           duration_ms: 1500,
         }),
-        node("urgent-result", "Escalated incident", "output", 80, 550),
-        node("support-result", "Support ticket", "output", 520, 550),
+        node("urgent-result", "보고 결과", "output", 80, 550),
+        node("support-result", "지원 결과", "output", 520, 550),
       ],
       edges: [
         edge("incident", "severity"),
@@ -122,26 +121,25 @@ export const templates: WorkflowTemplate[] = [
   },
   {
     id: "data-processing",
-    name: "Data Processing",
-    description:
-      "Enrich incoming records and route valid data through a deterministic pipeline.",
+    name: "데이터 처리",
+    description: "데이터에 필드를 추가하고 점수에 따라 결과를 분류합니다.",
     input: { record_id: "REC-301", score: 82, source: "local-input" },
     workflow: {
       id: "data-processing",
-      name: "Data Processing",
+      name: "데이터 처리",
       nodes: [
-        node("event", "Record received", "trigger", 300, 0),
-        node("enrich", "Enrich record", "transform", 300, 130, {
+        node("event", "데이터 입력", "trigger", 300, 0),
+        node("enrich", "처리 상태 추가", "transform", 300, 130, {
           field: "processed",
           value: true,
         }),
-        node("quality", "Quality gate", "condition", 300, 260, {
+        node("quality", "점수 비교", "condition", 300, 260, {
           field: "score",
           operator: "gte",
           value: 70,
         }),
-        node("accept", "Accepted record", "output", 80, 415),
-        node("reject", "Needs attention", "output", 520, 415),
+        node("accept", "통과 결과", "output", 80, 415),
+        node("reject", "확인 필요", "output", 520, 415),
       ],
       edges: [
         edge("event", "enrich"),
