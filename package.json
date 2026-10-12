@@ -1,0 +1,21 @@
+{
+  "name": "flowruntime",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local-first visual workflow engine with a custom Rust/WASM garbage collector",
+  "license": "MIT",
+  "workspaces": ["web"],
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "dev": "npm run dev --workspace web",
+    "build:wasm": "node scripts/build-wasm.mjs",
+    "build": "npm run build:wasm && npm run build --workspace web",
+    "test:rust": "cargo test --manifest-path engine/Cargo.toml --locked",
+    "test": "npm run test --workspace web",
+    "typecheck": "npm run typecheck --workspace web",
+    "test:e2e": "npm run test:e2e --workspace web",
+    "benchmark:native": "cargo run --release --manifest-path engine/Cargo.toml --example benchmark",
+    "benchmark:browser": "node scripts/browser-benchmark.mjs",
+    "preview": "npm run preview --workspace web"
+  }
+}
