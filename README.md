@@ -4,13 +4,37 @@
 
 [앱 실행하기](https://okorion.github.io/flowruntime/) · [구현 상세](docs/implementation.md) · [테스트·벤치마크](docs/validation.md) · [의존성 선택](docs/dependencies.md)
 
-## 먼저 한 번 실행해 보세요
+## 무엇을 볼 수 있나요?
 
-**주문 분류 → 실행하기 → 실행 결과** 순서로 누릅니다. 입력의 금액 `amount`가 1,250이면 `manual_review`, 300이면 `approved`가 됩니다.
+**입력 데이터를 작업 순서에 따라 처리하고, 그 과정에서 생긴 객체를 GC가 정리하는 모습을 볼 수 있습니다.** 코드를 읽기 전에 앱에서 실행 결과와 메모리 변화를 비교해 보세요.
 
-아래 그림은 실제 코드의 역할과 흐름을 단순화한 **개념도**입니다. 움직이는 선은 명령과 참조의 방향을 보여주며, 끊긴 참조는 정지해 있습니다. 슬롯 번호는 설명용 예시입니다.
+<picture>
+  <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: dark) and (max-width: 600px)" srcset="docs/diagrams/overview-mobile-dark-still.svg" />
+  <source media="(prefers-reduced-motion: reduce) and (max-width: 600px)" srcset="docs/diagrams/overview-mobile-light-still.svg" />
+  <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: dark)" srcset="docs/diagrams/overview-dark-still.svg" />
+  <source media="(prefers-reduced-motion: reduce)" srcset="docs/diagrams/overview-light-still.svg" />
+  <source media="(prefers-color-scheme: dark) and (max-width: 600px)" srcset="docs/diagrams/overview-mobile-dark.svg" />
+  <source media="(max-width: 600px)" srcset="docs/diagrams/overview-mobile-light.svg" />
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/overview-dark.svg" />
+  <img alt="작업 정의에서 실행과 결과로, 작업 공간에서 GC와 빈자리 재사용으로 이어지는 개념도" src="docs/diagrams/overview-light.svg" width="100%" />
+</picture>
 
-## 01 · 전체 구조
+그림에서 **위쪽은 결과를 만드는 과정**, **아래쪽은 실행에 쓴 작업 공간을 정리하는 과정**입니다. GC(Garbage Collection)는 보존할 시작점에서 더 이상 닿지 않는 객체를 회수합니다. 완료 기록은 별도로 보관하므로 객체를 회수한 뒤에도 결과를 확인할 수 있습니다.
+
+> 예를 들어 주문 금액이 1,250이면 검토 대상으로, 300이면 승인 대상으로 분류합니다. 실행을 반복하면 객체가 생기고, 보존 조건이 끝난 객체는 GC가 회수하여 다음 실행에 쓸 자리를 만듭니다.
+
+## 두 가지를 비교해 보세요
+
+| 확인할 것 | 앱에서 해볼 일 | 관찰할 변화 |
+| --- | --- | --- |
+| 입력에 따라 결과가 달라지는가 | **주문 분류 → 실행하기 → 실행 결과**. 입력의 `amount`를 1,250과 300으로 바꿔 실행 | `manual_review`와 `approved`로 결과가 달라집니다. |
+| 완료된 실행의 객체는 언제 없어지는가 | **개발자 도구**에서 자동 GC를 끄고 실행한 뒤, 가상 시간 **+5초를 두 번 → GC 실행** | 다른 실행이나 Pin이 없으면 Heap 점유 객체가 0개로 줄어듭니다. 완료 기록은 남습니다. |
+
+**Pin은 객체를 계속 보존하는 표시입니다.** Pin을 켜고 같은 실험을 하면 객체가 남고, 보존 기간이 지난 뒤 Pin을 해제하고 GC를 실행하면 회수됩니다.
+
+아래 그림은 실제 코드의 역할과 흐름을 단순화한 **개념도**입니다. 움직이는 선은 명령과 참조의 방향이며, 실시간 실행 상태를 나타내지는 않습니다. 슬롯 번호는 설명용 예시입니다.
+
+## 화면·실행 엔진·작업 공간의 역할
 
 <picture>
   <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: dark) and (max-width: 600px)" srcset="docs/diagrams/architecture-mobile-dark-still.svg" />
@@ -25,7 +49,9 @@
 
 React는 편집·조작·표시를 맡고, Rust/WASM은 노드 실행과 객체 수명을 관리합니다. 실행에는 백엔드가 필요하지 않습니다. 편집한 Workflow 정의는 브라우저에 저장됩니다.
 
-## 02 · 실행할 때 무엇이 생길까요?
+<details>
+<summary>한 단계 더 보기 · 실행 중에는 어떤 객체가 생길까요?</summary>
+
 
 <picture>
   <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: dark) and (max-width: 600px)" srcset="docs/diagrams/objects-mobile-dark-still.svg" />
@@ -40,7 +66,9 @@ React는 편집·조작·표시를 맡고, Rust/WASM은 노드 실행과 객체 
 
 Workflow의 화살표는 **노드 실행 순서**, Heap의 화살표는 **객체 사이의 참조**입니다. Workflow는 순환 없는 DAG지만, 실행 객체는 Run ⇄ Task처럼 서로 참조할 수 있습니다.
 
-## 03 · 언제 남기고, 언제 지울까요?
+</details>
+
+## GC는 무엇을 남기고 지울까요?
 
 <picture>
   <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: dark) and (max-width: 600px)" srcset="docs/diagrams/gc-cycle-mobile-dark-still.svg" />
@@ -53,11 +81,13 @@ Workflow의 화살표는 **노드 실행 순서**, Heap의 화살표는 **객체
   <img alt="GC 회수 과정" src="docs/diagrams/gc-cycle-light.svg" width="100%" />
 </picture>
 
-Root는 **실행 중인 Run, 완료 후 5초 이내 Run, Pin한 Run, 스케줄러에서 대기 중인 Continuation**입니다. 5초는 엔진의 가상 시간 기준입니다. GC는 Root에서 참조를 따라 도달한 객체를 남깁니다.
+보존할 시작점(Root)은 **진행 중인 실행, 완료 후 5초 이내의 실행, Pin한 실행, 다음 작업을 기다리는 정보**입니다. 코드에서는 실행 한 번을 `Run`, 다음 작업을 이어 갈 정보를 `Continuation`이라고 부릅니다. 5초는 엔진의 가상 시간 기준이며, GC는 이 시작점에서 참조를 따라 닿는 객체를 남깁니다.
 
-직접 비교하려면 **자동 GC 끄기 → 주문 분류 실행 → 가상 시간 +5초 두 번 → GC 실행**을 해보세요. 다른 실행이나 Pin이 없다면 Heap 점유 객체가 0개로 줄어듭니다. Pin을 켜고 반복하면 보존되고, 해제 후 GC를 실행하면 회수됩니다.
+서로 참조하는 객체라도 Root와 연결이 끊기면 함께 회수됩니다. **객체끼리 연결되어 있는지보다, 보존할 시작점에서 닿을 수 있는지가 기준입니다.**
 
-## 04 · 코드에서는 어떻게 구현할까요?
+<details>
+<summary>코드로 더 보기 · Root → Mark → Sweep과 슬롯 재사용</summary>
+
 
 <picture>
   <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: dark) and (max-width: 600px)" srcset="docs/diagrams/gc-implementation-mobile-dark-still.svg" />
@@ -80,6 +110,8 @@ Root는 **실행 중인 Run, 완료 후 5초 이내 Run, Pin한 Run, 스케줄�
 GC는 앱이 만든 Run·Task·Value·Continuation을 관리합니다. Rust의 모든 할당이나 JS 객체·DOM을 추적하지 않습니다. 빈 슬롯은 다음 실행에서 재사용하며, 객체가 줄어도 WASM 선형 메모리 크기는 그대로일 수 있습니다.
 
 완료 결과·Task·실행 정의는 **최근 100개·JSON 합계 8 MiB** 한도 안에서 별도로 보관합니다. 이 기록은 Root가 아니며, 새로고침·초기화·진단 기록 지우기로 삭제됩니다.
+
+</details>
 
 <details>
 <summary>실제 앱 화면 보기</summary>

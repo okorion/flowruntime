@@ -44,11 +44,33 @@ function implementation(m){
  if(m){t(26,493,'슬롯 7 · Generation 예시',13,p.muted,650);node(26,511,164,83,'7:1',['기존 객체'],p.orange);node(230,511,164,83,'7:2',['새 객체'],p.green);arrow(197,552,223,552,p.violet);t(26,627,'회수 → 세대 증가 → 슬롯 재사용',13,p.muted);t(26,658,'이전 Handle 7:1은 세대 불일치로 거부',12,p.orange)}
  else{r(434,224,696,112,p.card,p.line,10);t(453,249,'SLOT 7 / GENERATION',10,p.muted,800,'start',1.2);t(453,292,'7:1',28,p.orange,800);t(520,289,'기존 객체',13,p.muted);arrow(626,282,793,282,p.violet);t(710,267,'회수 → 세대 증가',11,p.muted,500,'middle');t(827,292,'7:2',28,p.green,800);t(895,289,'새 객체',13,p.muted);t(1108,316,'이전 7:1 조회는 거부',11,p.orange,650,'end');t(434,369,'빈 슬롯이 늘어도 WASM 선형 메모리 크기는 그대로일 수 있습니다.',12,p.muted)}
 }
-const diagrams={architecture,objects,'gc-cycle':gc,'gc-implementation':implementation};
+function overview(m){
+ start(m?420:1200,m?750:430,'실행과 정리를 한눈에','입력과 작업 순서를 받아 결과를 만듭니다. 실행 중 생긴 객체는 작업 공간에 두고, Root에서 닿지 않게 된 객체를 GC로 회수합니다. 완료 기록은 별도로 남습니다.');
+ heading(m,'START HERE','실행과 정리를 한눈에',['실행은 결과를 만들고, GC는 작업 공간을 정리합니다.'],'');
+ if(m){
+  node(26,160,368,84,'1. 작업을 정합니다',['입력 데이터 + Workflow']);arrow(210,249,210,278);
+  node(26,284,368,84,'2. 순서대로 실행합니다',['조건에 따라 다음 작업으로 이동'],p.cyan);arrow(210,373,210,402,p.cyan);
+  node(26,408,368,84,'3. 결과를 확인합니다',['완료 기록은 별도로 보관'],p.green);
+  r(26,532,368,172,p.card,p.line,10);t(44,561,'실행 중 사용한 작업 공간',17,p.ink,650);
+  t(44,592,'필요한 객체는 유지',14,p.muted);arrow(65,609,65,643,p.violet);
+  t(83,631,'더 이상 Root에서 닿지 않으면 GC',12,p.violet);
+  t(44,678,'회수한 빈자리는 다음 실행에서 재사용',13,p.muted);
+ }else{
+  node(434,65,190,102,'작업 정의',['입력 데이터','+ Workflow']);node(687,65,190,102,'실행',['순서대로 처리','조건에 따라 분기'],p.cyan);node(940,65,190,102,'결과',['처리 결과 확인','완료 기록 별도 보관'],p.green);
+  arrow(631,113,679,113);arrow(884,113,932,113,p.cyan);
+  arrow(782,175,782,224,p.violet);t(799,204,'실행 중 객체 생성',12,p.muted);
+  r(434,235,696,134,p.card,p.line,10);t(454,264,'작업 공간 · Heap',15,p.ink,650);
+  t(454,305,'필요한 객체 유지',14,p.ink);arrow(583,300,653,300,p.violet);
+  t(670,305,'GC로 회수',14,p.violet,650);arrow(758,300,825,300,p.violet);
+  t(844,305,'빈자리 재사용',14,p.ink);t(454,345,'회수 조건: 보존할 시작점(Root)에서 더 이상 닿지 않는 객체',12,p.muted);
+  t(434,403,'완료 기록과 작업 공간은 분리되어 있어, 객체 회수 후에도 결과를 볼 수 있습니다.',12,p.muted);
+ }
+}
+const diagrams={overview,architecture,objects,'gc-cycle':gc,'gc-implementation':implementation};
 for(const theme of Object.keys(themes))for(const m of [false,true])for(const [name,render] of Object.entries(diagrams)){
  p=themes[theme];render(m);if(desktop)b.push('</g>');b.push('</svg>');const svg=b.join('\n')+'\n',stem=`${out}${name}${m?'-mobile':''}-${theme}`;
  writeFileSync(`${stem}.svg`,svg);
  // Static picture sources also honor reduced motion in embedded image contexts.
  writeFileSync(`${stem}-still.svg`,svg.replaceAll('animation:flow 1.8s linear infinite','animation:none').replaceAll('animation:pulse 3s ease-in-out infinite','animation:none'));
 }
-console.log('Generated 16 animated SVGs and 16 reduced-motion variants.');
+console.log(`Generated ${Object.keys(diagrams).length*4} animated SVGs and matching reduced-motion variants.`);
