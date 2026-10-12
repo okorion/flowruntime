@@ -44,8 +44,10 @@
   <source media="(prefers-color-scheme: dark) and (max-width: 600px)" srcset="docs/diagrams/architecture-mobile-dark.svg" />
   <source media="(max-width: 600px)" srcset="docs/diagrams/architecture-mobile-light.svg" />
   <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/architecture-dark.svg" />
-  <img alt="전체 구조" src="docs/diagrams/architecture-light.svg" width="100%" />
+  <img alt="Workflow 실행 순서는 실선, JSON 명령 전달은 파선, Heap 할당·조회는 점선으로 구분한 브라우저 실행 구조" src="docs/diagrams/architecture-light.svg" width="100%" />
 </picture>
+
+실선은 **Workflow 실행 순서**, 파선은 **직렬화한 JSON 명령 전달**, 점선은 **Heap 할당·조회**입니다. 이 그림은 명령 전달 방향을 중심으로 보여주며, 엔진의 JSON 응답은 React가 다시 받아 표시합니다.
 
 브라우저 창은 **React 화면**, 칩은 **실행 엔진**, 메모리 모양은 **Managed Heap**을 나타냅니다. 큰 경계는 브라우저, 안쪽 경계는 Rust/WASM의 실행 영역입니다. React는 편집·조작·표시를 맡고, Rust/WASM은 노드 실행과 객체 수명을 관리합니다. 실행에는 백엔드가 필요하지 않습니다. 편집한 Workflow 정의는 브라우저에 저장됩니다.
 

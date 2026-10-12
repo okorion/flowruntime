@@ -12,7 +12,7 @@ function wire(d,c=p.blue,motion=true){b.push(`<path d="${d}" fill="none" stroke=
 function arrow(x,y,xx,yy,c=p.blue,motion=true){wire(`M${x} ${y} L${xx} ${yy}`,c,motion);const a=Math.atan2(yy-y,xx-x),z=6;b.push(`<path d="M${xx-z*Math.cos(a-.55)} ${yy-z*Math.sin(a-.55)} L${xx} ${yy} L${xx-z*Math.cos(a+.55)} ${yy-z*Math.sin(a+.55)}" fill="none" stroke="${c}" stroke-width="1.5"/>`)}
 function pill(x,y,w,s,c=p.blue){r(x,y,w,26,p.card,p.line,13);dot(x+12,y+13,c);t(x+23,y+17,s,10,c,750,'start',.6)}
 function node(x,y,w,h,s,lines,c=p.blue){r(x,y,w,h,p.card,p.line,10);b.push(`<rect x="${x+18}" y="${y+17}" width="3" height="17" rx="1.5" fill="${c}"/>`);t(x+30,y+30,s,17,p.ink,650);lines.forEach((s,i)=>t(x+18,y+53+i*21,s,13,p.muted))}
-function start(w,h,title,desc){desktop=w>500;if(desktop){w=800;h+=100;}b=[`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-labelledby="title desc"><title id="title">${esc(title)}</title><desc id="desc">${esc(desc)}</desc><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="${p.bg}"/><stop offset="1" stop-color="${p.end}"/></linearGradient><linearGradient id="accent"><stop stop-color="${p.blue}"/><stop offset=".5" stop-color="${p.cyan}"/><stop offset="1" stop-color="${p.violet}"/></linearGradient><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="${p.blue}" stroke-opacity=".035"/></pattern><filter id="shadow" x="-20%" y="-30%" width="140%" height="170%"><feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="${p.shadow}" flood-opacity=".07"/></filter></defs><style>@font-face{font-family:FlowRuntimeSans;src:url(data:font/woff2;base64,${font}) format('woff2');font-weight:100 900}text{font-family:FlowRuntimeSans,'Noto Sans KR',sans-serif}.flow{animation:flow 1.8s linear infinite}.pulse{animation:pulse 3s ease-in-out infinite}@keyframes flow{to{stroke-dashoffset:-18}}@keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}@media(prefers-reduced-motion:reduce){.flow,.pulse{animation:none}}</style><rect width="${w}" height="${h}" rx="16" fill="${p.bg}"/>`]}
+function start(w,h,title,desc){desktop=w>500;if(desktop){w=800;h+=100;}b=[`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-labelledby="title desc"><title id="title">${esc(title)}</title><desc id="desc">${esc(desc)}</desc><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="${p.bg}"/><stop offset="1" stop-color="${p.end}"/></linearGradient><linearGradient id="accent"><stop stop-color="${p.blue}"/><stop offset=".5" stop-color="${p.cyan}"/><stop offset="1" stop-color="${p.violet}"/></linearGradient><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="${p.blue}" stroke-opacity=".035"/></pattern><filter id="shadow" x="-20%" y="-30%" width="140%" height="170%"><feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="${p.shadow}" flood-opacity=".07"/></filter></defs><style>@font-face{font-family:FlowRuntimeSans;src:url(data:font/woff2;base64,${font}) format('woff2');font-weight:100 900}text{font-family:FlowRuntimeSans,'Noto Sans KR',sans-serif}.flow{animation:flow 1.8s linear infinite}.transfer{animation:transfer 1.8s linear infinite}@keyframes transfer{to{stroke-dashoffset:-20}}.pulse{animation:pulse 3s ease-in-out infinite}@keyframes flow{to{stroke-dashoffset:-18}}@keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}@media(prefers-reduced-motion:reduce){.flow,.pulse,.transfer{animation:none}}</style><rect width="${w}" height="${h}" rx="16" fill="${p.bg}"/>`]}
 function heading(m,num,title,lines,tag){
  const x=m?26:40;
  t(x,m?32:31,`FLOWRUNTIME / ${num}`,10,p.muted,600,'start',1.1);
@@ -21,9 +21,18 @@ function heading(m,num,title,lines,tag){
  else{t(x,99,lines.join(' '),14,p.muted);b.push(`<path d="M40 120H760" stroke="${p.line}"/>`);b.push('<g transform="translate(-383 100)">');}
 }
 
+// Relation meaning survives monochrome, static export, and reduced motion.
+function semanticEdge(x,y,xx,yy,kind){
+ const c={control:p.blue,data:p.cyan,memory:p.violet}[kind],a=Math.atan2(yy-y,xx-x)*180/Math.PI;
+ b.push(`<path d="M${x} ${y}L${xx} ${yy}" fill="none" stroke="${c}" stroke-width="1.8"${kind==='data'?' stroke-dasharray="6 4" class="transfer"':kind==='memory'?' stroke-dasharray="1 5" stroke-linecap="round"':''}/>`);
+ b.push(`<g transform="translate(${xx} ${yy}) rotate(${a})">${kind==='memory'?`<circle r="3.5" fill="${p.card}" stroke="${c}" stroke-width="1.8"/>`:`<path d="M-7 -4L0 0L-7 4${kind==='control'?'Z':''}" fill="${kind==='control'?c:'none'}" stroke="${c}" stroke-width="1.8"/>`}</g>`);
+}
+function edgeLegend(m){
+ const y=m?820:553;[['control','실행 순서'],['data','데이터 전달'],['memory','메모리 접근']].forEach(([kind,label],i)=>{const x=(m?30:55)+i*(m?128:232);semanticEdge(x,y,x+26,y,kind);t(x+34,y+4,label,11,p.muted);});
+}
 function browserIcon(x,y){
  r(x,y,160,100);b.push(`<path d="M${x} ${y+22}h160" stroke="${p.line}"/>`);[0,1,2].forEach(i=>dot(x+12+i*10,y+11,p.blue));
- r(x+16,y+43,34,30,p.soft,p.blue,5);r(x+111,y+43,34,30,p.soft,p.cyan,5);arrow(x+57,y+58,x+104,y+58);t(x+16,y+90,'Workflow',11,p.muted);
+ r(x+16,y+43,34,30,p.soft,p.blue,5);r(x+111,y+43,34,30,p.soft,p.cyan,5);semanticEdge(x+57,y+58,x+104,y+58,'control');t(x+16,y+90,'Workflow',11,p.muted);
 }
 function chipIcon(x,y){
  for(let i=0;i<4;i++)b.push(`<path d="M${x-8} ${y+17+i*20}h8 M${x+100} ${y+17+i*20}h8 M${x+20+i*20} ${y-8}v8 M${x+20+i*20} ${y+94}v8" stroke="${p.cyan}" stroke-width="2"/>`);
@@ -39,18 +48,18 @@ function architecture(m){
  heading(m,'01 / ARCHITECTURE','브라우저 안의 실행 구조',['화면에서 조작하고, 엔진에서 실행·정리합니다.'],'');
  if(!m)b.push('</g><g>');
  if(m){
-  r(18,150,384,659,p.card,p.line,14);t(34,178,'브라우저',14,p.ink,650);browserIcon(130,200);t(210,326,'React · 편집과 결과 조회',14,p.ink,650,'middle');arrow(210,344,210,385);t(225,370,'JSON',11,p.muted);
-  r(34,396,352,386,p.soft,p.cyan,12);t(50,425,'Rust / WASM 영역',14,p.cyan,650);chipIcon(60,462);heapIcon(204,460,162);arrow(172,508,194,508,p.violet);
+  r(18,150,384,659,p.card,p.line,14);t(34,178,'브라우저',14,p.ink,650);browserIcon(130,200);t(210,326,'React · 편집과 결과 조회',14,p.ink,650,'middle');semanticEdge(210,344,210,385,'data');t(225,364,'직렬화 · JSON 전달',11,p.cyan);
+  r(34,396,352,386,p.soft,p.cyan,12);t(50,425,'Rust / WASM 영역',14,p.cyan,650);chipIcon(60,462);heapIcon(204,460,162);semanticEdge(172,508,194,508,'memory');t(184,449,'할당·조회',11,p.violet,500,'middle');
   t(60,596,'실행 엔진',15,p.ink,650);t(60,619,'노드 처리 · 시간 제어',11,p.muted);t(204,596,'Managed Heap',14,p.violet,650);t(204,619,'Root 추적 · GC 회수',11,p.muted);
   r(50,662,320,89,p.card,p.line,10);t(66,691,'완료 기록 · 별도 복사본',15,p.green,650);t(66,716,'객체 회수 후에도 결과 조회',12,p.muted);t(66,738,'최근 100개 · JSON 합계 8 MiB',11,p.muted);
-  t(26,840,'칩·메모리 모양은 소프트웨어 역할을 나타냅니다.',11,p.muted);
+  edgeLegend(m);t(26,853,'칩·메모리 모양은 소프트웨어 역할을 나타냅니다.',11,p.muted);
  }else{
   r(30,149,740,392,p.card,p.line,14);t(48,179,'브라우저 · 별도 서버 없이 실행',14,p.ink,650);
   r(290,195,460,324,p.soft,p.cyan,12);t(308,222,'Rust / WASM 영역',14,p.cyan,650);
-  browserIcon(55,258);chipIcon(322,270);heapIcon(512,265);arrow(228,310,300,310);t(249,294,'JSON',11,p.muted);arrow(436,310,499,310,p.violet);
+  browserIcon(55,258);chipIcon(322,270);heapIcon(512,265);semanticEdge(228,310,300,310,'data');t(264,279,'직렬화',11,p.cyan,500,'middle');t(264,296,'JSON 전달',11,p.cyan,500,'middle');semanticEdge(436,310,499,310,'memory');t(468,294,'할당·조회',11,p.violet,500,'middle');
   t(55,400,'React 화면',16,p.ink,650);t(55,425,'편집 · 실행 · 결과 조회',12,p.muted);t(322,400,'실행 엔진',16,p.ink,650);t(322,425,'노드 처리 · 시간 제어',12,p.muted);t(512,400,'Managed Heap',16,p.violet,650);t(512,425,'Root 추적 · GC 회수',12,p.muted);
   r(308,450,424,50,p.card,p.line,8);t(324,473,'완료 기록',13,p.green,650);t(425,473,'객체 회수 후에도 결과 조회',12,p.muted);t(324,491,'최근 100개 · JSON 합계 8 MiB의 별도 복사본',11,p.muted);
-  t(40,577,'경계는 소프트웨어의 실행 위치를, 칩·메모리 모양은 역할을 나타냅니다.',12,p.muted);
+  edgeLegend(m);t(40,588,'경계는 소프트웨어의 실행 위치를, 칩·메모리 모양은 역할을 나타냅니다.',12,p.muted);
  }
 }
 function memoryInside(m){
@@ -111,6 +120,6 @@ for(const theme of Object.keys(themes))for(const m of [false,true])for(const [na
  p=themes[theme];render(m);if(desktop)b.push('</g>');b.push('</svg>');const svg=b.join('\n')+'\n',stem=`${out}${name}${m?'-mobile':''}-${theme}`;
  writeFileSync(`${stem}.svg`,svg);
  // Static picture sources also honor reduced motion in embedded image contexts.
- writeFileSync(`${stem}-still.svg`,svg.replaceAll('animation:flow 1.8s linear infinite','animation:none').replaceAll('animation:pulse 3s ease-in-out infinite','animation:none'));
+ writeFileSync(`${stem}-still.svg`,svg.replaceAll('animation:transfer 1.8s linear infinite','animation:none').replaceAll('animation:flow 1.8s linear infinite','animation:none').replaceAll('animation:pulse 3s ease-in-out infinite','animation:none'));
 }
 console.log(`Generated ${Object.keys(diagrams).length*4} animated SVGs and matching reduced-motion variants.`);
