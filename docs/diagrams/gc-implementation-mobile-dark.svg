@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="942" viewBox="0 0 420 942" role="img" aria-labelledby="title desc"><title id="title">GC 구현과 슬롯 재사용</title><desc id="desc">Root를 모으고, 참조를 따라 Mark한 뒤, 표시되지 않은 객체를 Sweep합니다. 예시 슬롯 7의 Generation은 1에서 2로 바뀌며 예전 Handle 7:1은 거부됩니다.</desc><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#101927"/><stop offset="1" stop-color="#191a32"/></linearGradient><pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#91b6ff" stroke-opacity=".055"/></pattern></defs><style>text{font-family:'Malgun Gothic','Apple SD Gothic Neo','Segoe UI',sans-serif}</style><rect width="420" height="942" rx="24" fill="url(#bg)"/><rect width="420" height="942" rx="24" fill="url(#grid)"/>
+<text x="28" y="40" font-size="17" fill="#91b6ff" font-weight="750" text-anchor="start">FLOWRUNTIME  /  04</text>
+<text x="28" y="85" font-size="28" fill="#eef4ff" font-weight="800" text-anchor="start">코드는 이 순서로 읽기</text>
+<text x="28" y="121" font-size="18" fill="#b5c5dd" font-weight="500" text-anchor="start">찾기 → 표시 → 회수 → 재사용</text>
+<rect x="28" y="155" width="364" height="122" rx="18" fill="#1b293b" stroke="#465977"/>
+<rect x="28" y="173" width="4" height="86" rx="2" fill="#91b6ff"/>
+<text x="48" y="190" font-size="24" fill="#91b6ff" font-weight="750" text-anchor="start">1 · Root 수집</text>
+<text x="48" y="223" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">남겨야 할 시작점</text>
+<text x="48" y="250" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">diagnostics.rs · root_map()</text>
+<rect x="28" y="297" width="364" height="122" rx="18" fill="#1b293b" stroke="#465977"/>
+<rect x="28" y="315" width="4" height="86" rx="2" fill="#73dae4"/>
+<text x="48" y="332" font-size="24" fill="#73dae4" font-weight="750" text-anchor="start">2 · Mark</text>
+<text x="48" y="365" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">참조를 따라 생존 표시</text>
+<text x="48" y="392" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">gc.rs · collect()</text>
+<rect x="28" y="439" width="364" height="122" rx="18" fill="#1b293b" stroke="#465977"/>
+<rect x="28" y="457" width="4" height="86" rx="2" fill="#c7a7ff"/>
+<text x="48" y="474" font-size="24" fill="#c7a7ff" font-weight="750" text-anchor="start">3 · Sweep</text>
+<text x="48" y="507" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">표시 안 된 객체 회수</text>
+<text x="48" y="534" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">gc.rs → heap.rs</text>
+<text x="28" y="610" font-size="22" fill="#eef4ff" font-weight="750" text-anchor="start">슬롯은 재사용하고, 세대는 바꿉니다.</text>
+<rect x="28" y="635" width="364" height="112" rx="18" fill="#1b293b" stroke="#465977"/>
+<rect x="28" y="653" width="4" height="76" rx="2" fill="#ffbf87"/>
+<text x="48" y="670" font-size="24" fill="#ffbf87" font-weight="750" text-anchor="start">예시 · 슬롯 7 / 세대 1</text>
+<text x="48" y="703" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">기존 객체 · Handle 7:1</text>
+<path d="M210 753 L210 784" fill="none" stroke="#c7a7ff" stroke-width="2.5" />
+<path d="M205.20574461395796 775.2241743810963 L210 784 L214.79425538604204 775.2241743810963" fill="none" stroke="#c7a7ff" stroke-width="2.5"/>
+<rect x="28" y="795" width="364" height="112" rx="18" fill="#1b293b" stroke="#465977"/>
+<rect x="28" y="813" width="4" height="76" rx="2" fill="#83dbb3"/>
+<text x="48" y="830" font-size="24" fill="#83dbb3" font-weight="750" text-anchor="start">회수 후 · 슬롯 7 / 세대 2</text>
+<text x="48" y="863" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">새 객체 · Handle 7:2</text>
+<text x="28" y="929" font-size="18" fill="#ffbf87" font-weight="650" text-anchor="start">이전 7:1 조회 → 세대 불일치로 거부</text>
+</svg>

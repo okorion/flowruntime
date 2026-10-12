@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {"title": "FlowRuntime · 브라우저 안의 실행 엔진", "quality_profile": "showcase", "viewBox": [1080, 640]},
+  "components": [
+    {"id":"editor","type":"frontend","label":"화면 · React","sublabel":"Workflow 편집 · 결과 조회","pos":[50,100],"size":[240,90]},
+    {"id":"bridge","type":"messagebus","label":"WASM 경계","sublabel":"wasm-bindgen · JSON","pos":[420,100],"size":[240,90]},
+    {"id":"runtime","type":"backend","label":"Rust 실행 엔진","sublabel":"검증 · 분기 · 가상 시간","pos":[790,100],"size":[240,90]},
+    {"id":"roots","type":"security","label":"Root · 보존의 시작점","sublabel":"실행 중 · 보존 기간 · Pin · 대기","pos":[50,410],"size":[240,90]},
+    {"id":"collector","type":"backend","label":"GC · Mark / Sweep","sublabel":"참조를 추적하고 남은 객체 회수","pos":[420,410],"size":[240,90]},
+    {"id":"arena","type":"database","label":"Heap · 객체 저장소","sublabel":"Run · Task · Value · Continuation","pos":[790,410],"size":[240,90]}
+  ],
+  "connections": [
+    {"from":"editor","to":"bridge","label":"명령","variant":"emphasis"},
+    {"from":"bridge","to":"runtime","label":"실행","variant":"emphasis"},
+    {"from":"runtime","to":"arena","label":"객체 할당","variant":"emphasis","labelAt":[910,300]},
+    {"from":"roots","to":"collector","label":"추적 시작"},
+    {"from":"collector","to":"arena","label":"회수·재사용"}
+  ],
+  "cards": [
+    {"dot":"cyan","title":"모두 같은 브라우저 안에서","items":["React는 조작과 표시, Rust/WASM은 실행과 GC를 담당합니다."]},
+    {"dot":"emerald","title":"결과 기록은 별도로 보관","items":["완료 기록을 복사해 두므로 객체 회수 후에도 결과를 읽습니다."]}
+  ]
+}

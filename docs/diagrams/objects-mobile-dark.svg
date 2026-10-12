@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="826" viewBox="0 0 420 826" role="img" aria-labelledby="title desc"><title id="title">실행할 때 생기는 객체</title><desc id="desc">Run은 실행 한 번, Task는 노드 처리, Value는 입출력 데이터, Continuation은 다음 작업을 이어 갈 정보입니다. Run과 Task는 서로 참조합니다.</desc><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#101927"/><stop offset="1" stop-color="#191a32"/></linearGradient><pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#91b6ff" stroke-opacity=".055"/></pattern></defs><style>text{font-family:'Malgun Gothic','Apple SD Gothic Neo','Segoe UI',sans-serif}</style><rect width="420" height="826" rx="24" fill="url(#bg)"/><rect width="420" height="826" rx="24" fill="url(#grid)"/>
+<text x="28" y="40" font-size="17" fill="#91b6ff" font-weight="750" text-anchor="start">FLOWRUNTIME  /  02</text>
+<text x="28" y="85" font-size="28" fill="#eef4ff" font-weight="800" text-anchor="start">실행 한 번, 객체 네 종류</text>
+<text x="28" y="121" font-size="18" fill="#b5c5dd" font-weight="500" text-anchor="start">Heap은 실행에 필요한 객체의 저장소</text>
+<rect x="28" y="153" width="364" height="124" rx="18" fill="#1b293b" stroke="#465977"/>
+<rect x="28" y="171" width="4" height="88" rx="2" fill="#91b6ff"/>
+<text x="48" y="188" font-size="24" fill="#91b6ff" font-weight="750" text-anchor="start">Run</text>
+<text x="48" y="221" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">실행 한 번</text>
+<text x="48" y="248" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">Task 목록과 최종 결과</text>
+<rect x="28" y="293" width="364" height="124" rx="18" fill="#1b293b" stroke="#465977"/>
+<rect x="28" y="311" width="4" height="88" rx="2" fill="#73dae4"/>
+<text x="48" y="328" font-size="24" fill="#73dae4" font-weight="750" text-anchor="start">Task</text>
+<text x="48" y="361" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">노드 하나의 처리</text>
+<text x="48" y="388" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">어느 Run인지 / 입출력</text>
+<rect x="28" y="433" width="364" height="124" rx="18" fill="#1b293b" stroke="#465977"/>
+<rect x="28" y="451" width="4" height="88" rx="2" fill="#c7a7ff"/>
+<text x="48" y="468" font-size="24" fill="#c7a7ff" font-weight="750" text-anchor="start">Value</text>
+<text x="48" y="501" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">입력·출력 데이터</text>
+<text x="48" y="528" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">JSON 값을 보관</text>
+<rect x="28" y="573" width="364" height="124" rx="18" fill="#1b293b" stroke="#465977"/>
+<rect x="28" y="591" width="4" height="88" rx="2" fill="#ffbf87"/>
+<text x="48" y="608" font-size="24" fill="#ffbf87" font-weight="750" text-anchor="start">Continuation</text>
+<text x="48" y="641" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">다음 작업을 이어 갈 정보</text>
+<text x="48" y="668" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">재개할 Run / Task / 값</text>
+<text x="28" y="746" font-size="19" fill="#eef4ff" font-weight="650" text-anchor="start">Run ⇄ Task : 서로 참조할 수 있습니다.</text>
+<text x="28" y="782" font-size="18" fill="#b5c5dd" font-weight="500" text-anchor="start">Root가 끊기면 함께 회수할 수 있습니다.</text>
+</svg>

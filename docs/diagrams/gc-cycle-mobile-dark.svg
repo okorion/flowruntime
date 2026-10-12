@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="920" viewBox="0 0 420 920" role="img" aria-labelledby="title desc"><title id="title">GC 회수 과정</title><desc id="desc">Root가 연결된 객체를 남깁니다. 보존 기간이 끝나고 다른 Root가 없으면 연결이 끊깁니다. GC는 Root에서 도달할 수 없는 객체를 회수합니다. Pin은 Root를 유지합니다.</desc><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#101927"/><stop offset="1" stop-color="#191a32"/></linearGradient><pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#91b6ff" stroke-opacity=".055"/></pattern></defs><style>text{font-family:'Malgun Gothic','Apple SD Gothic Neo','Segoe UI',sans-serif}</style><rect width="420" height="920" rx="24" fill="url(#bg)"/><rect width="420" height="920" rx="24" fill="url(#grid)"/>
+<text x="28" y="40" font-size="17" fill="#91b6ff" font-weight="750" text-anchor="start">FLOWRUNTIME  /  03</text>
+<text x="28" y="85" font-size="28" fill="#eef4ff" font-weight="800" text-anchor="start">남길 기준은 Root와의 연결</text>
+<text x="28" y="121" font-size="18" fill="#b5c5dd" font-weight="500" text-anchor="start">Root = 아직 필요한 객체를 찾는 시작점</text>
+<rect x="28" y="154" width="364" height="200" rx="18" fill="#1b293b" stroke="#465977"/>
+<text x="48" y="188" font-size="24" fill="#83dbb3" font-weight="750" text-anchor="start">① 연결됨</text>
+<rect x="48" y="212" width="74" height="37" rx="10" fill="#233349" stroke="#465977"/>
+<text x="85" y="238" font-size="20" fill="#eef4ff" font-weight="650" text-anchor="middle">Root</text>
+<path d="M132 230 L364 230" fill="none" stroke="#83dbb3" stroke-width="2.5" />
+<path d="M355.22417438109625 234.79425538604204 L364 230 L355.22417438109625 225.20574461395796" fill="none" stroke="#83dbb3" stroke-width="2.5"/>
+<rect x="48" y="269" width="100" height="44" rx="10" fill="#233349" stroke="#465977"/>
+<text x="98" y="298" font-size="21" fill="#91b6ff" font-weight="750" text-anchor="middle">Run</text>
+<rect x="272" y="269" width="100" height="44" rx="10" fill="#233349" stroke="#465977"/>
+<text x="322" y="298" font-size="21" fill="#73dae4" font-weight="750" text-anchor="middle">Task</text>
+<text x="210" y="299" font-size="24" fill="#b5c5dd" font-weight="600" text-anchor="middle">⇄</text>
+<path d="M364 230 V257 H98 V265" fill="none" stroke="#83dbb3" stroke-width="2" />
+<text x="48" y="341" font-size="18" fill="#b5c5dd" font-weight="500" text-anchor="start">실행 중 / 보존 기간 / Pin</text>
+<rect x="28" y="382" width="364" height="200" rx="18" fill="#1b293b" stroke="#465977"/>
+<text x="48" y="416" font-size="24" fill="#ffbf87" font-weight="750" text-anchor="start">② 연결 끊김</text>
+<rect x="48" y="440" width="74" height="37" rx="10" fill="#233349" stroke="#465977"/>
+<text x="85" y="466" font-size="20" fill="#eef4ff" font-weight="650" text-anchor="middle">Root</text>
+<path d="M132 458 L364 458" fill="none" stroke="#ffbf87" stroke-width="2.5" stroke-dasharray="6 6"/>
+<path d="M355.22417438109625 462.79425538604204 L364 458 L355.22417438109625 453.20574461395796" fill="none" stroke="#ffbf87" stroke-width="2.5"/>
+<text x="188" y="466" font-size="28" fill="#ffbf87" font-weight="800" text-anchor="start">×</text>
+<rect x="48" y="497" width="100" height="44" rx="10" fill="#233349" stroke="#465977"/>
+<text x="98" y="526" font-size="21" fill="#91b6ff" font-weight="750" text-anchor="middle">Run</text>
+<rect x="272" y="497" width="100" height="44" rx="10" fill="#233349" stroke="#465977"/>
+<text x="322" y="526" font-size="21" fill="#73dae4" font-weight="750" text-anchor="middle">Task</text>
+<text x="210" y="527" font-size="24" fill="#b5c5dd" font-weight="600" text-anchor="middle">⇄</text>
+<path d="M364 458 V485 H98 V493" fill="none" stroke="#ffbf87" stroke-width="2" stroke-dasharray="6 6"/>
+<text x="48" y="569" font-size="18" fill="#b5c5dd" font-weight="500" text-anchor="start">완료 후 5초 · Pin 없음</text>
+<rect x="28" y="610" width="364" height="200" rx="18" fill="#1b293b" stroke="#465977"/>
+<text x="48" y="644" font-size="24" fill="#c7a7ff" font-weight="750" text-anchor="start">③ GC 실행</text>
+<text x="48" y="699" font-size="24" fill="#c7a7ff" font-weight="750" text-anchor="start">Run · Task 회수</text>
+<text x="48" y="736" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">서로 참조해도 회수 가능</text>
+<text x="48" y="779" font-size="18" fill="#b5c5dd" font-weight="500" text-anchor="start">빈 슬롯 → 다음 실행에 재사용</text>
+<path d="M210 360 L210 375" fill="none" stroke="#91b6ff" stroke-width="2.5" />
+<path d="M205.20574461395796 366.22417438109625 L210 375 L214.79425538604204 366.22417438109625" fill="none" stroke="#91b6ff" stroke-width="2.5"/>
+<path d="M210 588 L210 603" fill="none" stroke="#91b6ff" stroke-width="2.5" />
+<path d="M205.20574461395796 594.2241743810963 L210 603 L214.79425538604204 594.2241743810963" fill="none" stroke="#91b6ff" stroke-width="2.5"/>
+<text x="28" y="858" font-size="18" fill="#83dbb3" font-weight="650" text-anchor="start">Pin을 켜면 ① 유지 · 해제하면 회수 가능</text>
+<text x="28" y="890" font-size="16" fill="#b5c5dd" font-weight="500" text-anchor="start">조건: 완료 + 보존 기간 만료 + 다른 Root 없음</text>
+</svg>
