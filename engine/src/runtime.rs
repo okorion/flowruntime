@@ -20,6 +20,7 @@ pub struct Engine {
     pub(crate) retained: BTreeMap<u64, (Handle, u64)>,
     pub(crate) pins: BTreeMap<u64, Handle>,
     pub(crate) history: VecDeque<Value>,
+    pub(crate) history_bytes: usize,
     pub(crate) next_id: u64,
     pub(crate) sequence: u64,
     pub(crate) total_runs: u64,
@@ -51,6 +52,7 @@ impl Engine {
             retained: BTreeMap::new(),
             pins: BTreeMap::new(),
             history: VecDeque::new(),
+            history_bytes: 0,
             next_id: 0,
             sequence: 0,
             total_runs: 0,
@@ -129,6 +131,7 @@ impl Engine {
             }
             "clear_diagnostics" => {
                 self.history.clear();
+                self.history_bytes = 0;
                 self.total_runs = self.active.len() as u64;
                 self.completed_runs = 0;
                 self.failed_runs = 0;
@@ -521,10 +524,14 @@ impl Engine {
         } else if status == "failed" {
             self.failed_runs += 1;
         }
-        if let Some(summary) = self.summary(handle) {
-            self.history.push_back(summary);
-            if self.history.len() > HISTORY {
-                self.history.pop_front();
+        // Diagnostic values contain copied JSON, never owning heap references.
+        if let Ok(detail) = self.run_detail(id) {
+            self.history_bytes += encoded_len(&detail);
+            self.history.push_back(detail);
+            while self.history.len() > HISTORY || self.history_bytes > MAX_HISTORY_BYTES {
+                if let Some(old) = self.history.pop_front() {
+                    self.history_bytes -= encoded_len(&old);
+                }
             }
         }
     }
@@ -535,6 +542,7 @@ impl Engine {
         self.retained.clear();
         self.pins.clear();
         self.history.clear();
+        self.history_bytes = 0;
         for index in 0..self.heap.slots.len() {
             self.heap.release(index);
         }

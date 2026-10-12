@@ -61,9 +61,18 @@ impl Engine {
         )
     }
     pub(crate) fn run_detail(&self, id: u64) -> Result<Value, String> {
-        let handle = self
-            .find_run(id)
-            .ok_or("Run has been collected or is unknown")?;
+        let Some(handle) = self.find_run(id) else {
+            let mut detail = self
+                .history
+                .iter()
+                .find(|entry| entry["id"].as_u64() == Some(id))
+                .cloned()
+                .ok_or("Run history is unavailable or has expired")?;
+            detail["collected"] = json!(true);
+            detail["retained"] = json!(false);
+            detail["pinned"] = json!(false);
+            return Ok(detail);
+        };
         let run = match self.heap.get(handle) {
             Some(Object::Run(run)) => run,
             _ => return Err("Stale Run handle".into()),
@@ -81,7 +90,16 @@ impl Engine {
                 .find_run(id)
                 .and_then(|h| self.summary(h))
                 .unwrap_or_else(|| {
-                    let mut value = old.clone();
+                    let mut value = Value::Object(
+                        old.as_object()
+                            .unwrap()
+                            .iter()
+                            .filter(|(key, _)| {
+                                key.as_str() != "workflow" && key.as_str() != "tasks"
+                            })
+                            .map(|(key, value)| (key.clone(), value.clone()))
+                            .collect(),
+                    );
                     value["collected"] = json!(true);
                     value["retained"] = json!(false);
                     value["pinned"] = json!(false);

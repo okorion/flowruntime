@@ -18,6 +18,7 @@ const MAX_VIRTUAL: u64 = 1_000_000_000_000;
 const MAX_SAFE_ID: u64 = 9_007_199_254_740_991;
 const RETENTION: u64 = 5000;
 const HISTORY: usize = 100;
+const MAX_HISTORY_BYTES: usize = 8 * 1024 * 1024;
 const RUN_TIMEOUT: u64 = 120_000;
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]

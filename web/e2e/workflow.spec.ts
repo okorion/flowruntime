@@ -1,6 +1,26 @@
 import { expect, test, type Page } from "@playwright/test";
 
 const browserErrors = new WeakMap<Page, string[]>();
+
+test("completed results remain readable after automatic GC and reopening the monitor", async ({ page }) => {
+  await openApp(page);
+  await page.getByRole("button", { name: "실행하기", exact: true }).click();
+  await expect(page.getByTestId("run-result")).toContainText("manual_review");
+  // Exercise the real running timer: retention expiry used to erase this view.
+  await expect(page.getByTestId("archived-run-notice")).toBeVisible({ timeout: 12000 });
+  await expect(page.getByTestId("run-result")).toContainText("manual_review");
+  await expect(page.getByTestId("task-timeline")).toContainText("수동 검토로 분류");
+  await expect(page.getByRole("button", { name: "Run 보존 (Pin)", exact: true })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "객체 참조 보기", exact: true })).toBeDisabled();
+  await developerTools(page);
+  await expect(page.getByTestId("live-objects")).toHaveText("0");
+  await monitor(page);
+  await expect(page.getByTestId("run-result")).toContainText("manual_review");
+  await page.getByRole("button", { name: "실행하기", exact: true }).click();
+  await page.getByRole("button", { name: "Run #1", exact: true }).click();
+  await expect(page.getByTestId("archived-run-notice")).toBeVisible();
+  await expect(page.getByTestId("run-result")).toContainText("manual_review");
+});
 test.beforeEach(async ({ page }) => {
   const errors: string[] = [];
   browserErrors.set(page, errors);

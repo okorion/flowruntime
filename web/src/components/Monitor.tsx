@@ -46,6 +46,7 @@ export function Monitor({
   useEffect(() => {
     if (selectedRun == null) {
       setDetail(null);
+      setDetailError(null);
       return;
     }
     try {
@@ -113,7 +114,7 @@ export function Monitor({
         </div>
         <div className="run-list-footer">
           <Icon name="info" size={13} />
-          완료 기록은 최근 {state.limits.history_limit}개까지 보관합니다.
+          완료 기록은 최근 {state.limits.history_limit}개·JSON 8 MiB 한도 내에서 보관합니다.
         </div>
       </aside>
       <section className="execution-detail">
@@ -177,6 +178,7 @@ export function Monitor({
                 </button>
                 <button
                   className="button button-small"
+                  disabled={detail.collected}
                   onClick={() => onTrace(detail.handle, detail.id)}
                 >
                   <Icon name="search" size={14} />
@@ -196,6 +198,11 @@ export function Monitor({
                 )}
               </div>
             </div>
+            {detail.collected && (
+              <p className="waiting-note" data-testid="archived-run-notice">
+                실행 객체는 GC로 회수되었습니다. 아래 결과와 처리 순서는 완료 시 저장한 기록입니다.
+              </p>
+            )}
             <details className="run-metadata">
               <summary>실행 상세 · 시작 시각과 보존 상태</summary>
               <div className="execution-metadata">
@@ -287,6 +294,7 @@ export function Monitor({
                         now={state.now_ms}
                         runStart={detail.started_at}
                         selected={selectedTask === item.node_id}
+                        collected={detail.collected}
                         onSelect={() => setSelectedTask(item.node_id)}
                         onTrace={() => onTrace(item.handle, detail.id)}
                       />
@@ -330,6 +338,7 @@ export function Monitor({
                       )}
                       <button
                         className="button button-small"
+                        disabled={detail.collected}
                         onClick={() => onTrace(task.handle, detail.id)}
                       >
                         <Icon name="search" size={14} />
@@ -367,6 +376,7 @@ export function Monitor({
                         </p>
                         <button
                           className="text-button"
+                          disabled={detail.collected}
                           onClick={() => onTrace(detail.handle, detail.id)}
                         >
                           참조 관계 보기
@@ -440,6 +450,7 @@ function TaskRow({
   selected,
   onSelect,
   onTrace,
+  collected,
 }: {
   task: TaskView;
   index: number;
@@ -448,6 +459,7 @@ function TaskRow({
   selected: boolean;
   onSelect: () => void;
   onTrace: () => void;
+  collected: boolean;
 }) {
   return (
     <div className={`timeline-row ${selected ? "selected" : ""}`}>
@@ -495,6 +507,7 @@ function TaskRow({
         className="icon-button timeline-trace"
         aria-label={`${displayLabel(task.label)} Task 참조 보기`}
         title="Task 객체 참조 보기"
+        disabled={collected}
         onClick={onTrace}
       >
         <Icon name="search" size={14} />

@@ -22,6 +22,24 @@ beforeAll(async () => {
   await init({ module_or_path: bytes });
 });
 
+it("keeps completed diagnostic details after automatic collection and slot reuse", () =>
+  usingEngine((call) => {
+    call({ op: "load", workflow: copyWorkflow() });
+    const run = call<RunSummary>({ op: "start", input: templates[0].input });
+    call({ op: "step", delta_ms: 1 });
+    const before = call<RunDetail>({ op: "run", run_id: run.id });
+    call({ op: "step", delta_ms: 6000 });
+    expect(call<EngineState>({ op: "state" }).heap.live_objects).toBe(0);
+    call({ op: "start", input: { amount: 100 } });
+    call({ op: "step", delta_ms: 1 });
+    const after = call<RunDetail>({ op: "run", run_id: run.id });
+    expect(after.collected).toBe(true);
+    expect(after.result).toEqual(before.result);
+    expect(after.tasks).toEqual(before.tasks);
+    expect(after.workflow).toEqual(before.workflow);
+    expect(call<Inspection>({ op: "inspect", handle: run.handle }).valid).toBe(false);
+  }));
+
 function client() {
   const engine = new WasmEngine();
   const call = <T = unknown>(request: Record<string, unknown>): T => {

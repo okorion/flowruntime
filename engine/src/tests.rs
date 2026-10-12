@@ -1,6 +1,52 @@
 use super::*;
 
 #[test]
+fn completed_snapshot_survives_gc_without_protecting_objects() {
+    let mut engine = loaded(0);
+    let run = start(&mut engine, json!({"value":42}));
+    tick(&mut engine, 1);
+    let id = run["id"].as_u64().unwrap();
+    let before = engine.run_detail(id).unwrap();
+    tick(&mut engine, RETENTION + 1);
+    engine.collect();
+    assert_eq!(live(&engine), 0);
+    let after = engine.run_detail(id).unwrap();
+    for field in ["result", "tasks", "workflow", "status", "completed_at"] {
+        assert_eq!(after[field], before[field]);
+    }
+    assert_eq!(after["collected"], true);
+    assert_eq!(after["pinned"], false);
+    assert!(engine.state()["runs"][0].get("tasks").is_none());
+    command(&mut engine, json!({"op":"clear_diagnostics"}));
+    assert!(engine.run_detail(id).is_err());
+    assert_eq!(engine.history_bytes, 0);
+}
+
+#[test]
+fn snapshot_history_obeys_byte_budget_and_reset() {
+    let mut engine = loaded(0);
+    let first = start(&mut engine, json!({"data":"x".repeat(15000)}));
+    tick(&mut engine, 1);
+    for _ in 0..100 {
+        start(&mut engine, json!({"data":"x".repeat(15000)}));
+        tick(&mut engine, RETENTION + 1);
+        engine.collect();
+    }
+    assert!(engine.history.len() < HISTORY);
+    assert!(engine.history_bytes <= MAX_HISTORY_BYTES);
+    assert_eq!(
+        engine.history_bytes,
+        engine.history.iter().map(encoded_len).sum::<usize>()
+    );
+    assert!(engine.run_detail(first["id"].as_u64().unwrap()).is_err());
+    let last = engine.history.back().unwrap()["id"].as_u64().unwrap();
+    assert!(engine.run_detail(last).is_ok());
+    engine.reset();
+    assert_eq!(engine.history_bytes, 0);
+    assert!(engine.run_detail(last).is_err());
+}
+
+#[test]
 fn collector_handles_multiple_roots_shared_values_duplicate_and_invalid_edges() {
     let mut engine = loaded(0);
     engine.auto_gc = false;

@@ -12,9 +12,9 @@
 | 웹 | Node 22.14.0, npm 11.5.2, lockfile 설치 |
 | 브라우저 | Playwright Chromium 156.0.8078.4 |
 | Rust 검사 | `cargo fmt --check`, Clippy `--all-targets --locked -- -D warnings` 통과 |
-| Native unit tests | **23개 통과** |
-| 실제 WASM Vitest | **13개 통과** |
-| 로컬 프로덕션 E2E | **9개 통과**, 1440×1000 및 400 px 폭 viewport |
+| Native unit tests | **25개 통과** |
+| 실제 WASM Vitest | **14개 통과** |
+| 브라우저 E2E | **10개 통과**, 1440×1000 및 400 px 폭 viewport |
 | 빌드 | WASM release, TypeScript 검사, Vite production build 통과 |
 | 문서 | README Mermaid 8개 실제 파싱·렌더링 확인 |
 
@@ -45,10 +45,15 @@
 7. Continuous 실행 중 편집 정의가 유효하지 않게 바뀌어도 Stop으로 중단한다.
 8. 400 px 폭에서 세 상위 화면의 가로 넘침이 없는지 확인한다.
 9. 한국어 안내, 기본으로 접힌 고급 제어, 주요 안내·입력 글자 15 px 이상, 모바일 그래프 높이와 실제 실행 결과를 확인한다.
+10. 실제 타이머로 자동 GC가 실행된 뒤에도 결과·Task 순서가 남고, 다른 화면에서 돌아오거나 슬롯이 재사용되어도 이전 Run을 읽을 수 있는지 확인한다. Heap 객체는 0개로 회수되고 Pin·참조 조작은 비활성화된다.
+
+Rust 테스트는 기록의 JSON 8 MiB 한도에 따른 오래된 기록 제거, 정확한 용량 집계, 초기화·진단 삭제도 확인한다. 완료 기록은 Heap 객체를 보존하지 않는 복사본이다.
 
 각 E2E는 browser console error와 page error도 검사한다. Firefox·Safari와 실제 휴대폰 기기는 검증하지 않았다.
 
 ## 브라우저 WASM 벤치마크
+
+아래 브라우저·네이티브 수치는 완료 상세 기록 보관을 추가하기 전 버전의 측정이다. 현재 버전의 기록 복사 비용을 포함한 성능은 재측정하지 않았다.
 
 원시 결과: [browser.json](benchmarks/browser.json) · 실행기: [browser-benchmark.mjs](../scripts/browser-benchmark.mjs).
 

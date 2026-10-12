@@ -64,6 +64,7 @@ export const canvasLabels = {
 
 export function errorText(value: string): string {
   const exact: Record<string, string> = {
+    "Run history is unavailable or has expired": "실행 기록이 보관 한도를 넘었거나 초기화되었습니다. 왼쪽에서 다른 Run을 선택하세요.",
     "Workflow requires exactly one Trigger": "Trigger가 정확히 1개 필요합니다.",
     "Workflow requires 1–64 nodes": "노드는 1~64개여야 합니다.",
     "Workflow allows at most 128 edges":
