@@ -1,0 +1,188 @@
+{
+  "fixture": "9-node branch/delay DAG; 6 nodes executed per run",
+  "memory_sampling": "Live objects and slot capacity sampled after each batch finishes, before retention expiration; not process RSS",
+  "runtime": "native Rust",
+  "scenarios": [
+    {
+      "auto_gc": true,
+      "batch_size": 100,
+      "final_heap": {
+        "allocations": 1600,
+        "by_type": {
+          "Continuation": 0,
+          "Run": 0,
+          "Task": 0,
+          "Value": 0
+        },
+        "capacity": 1228,
+        "free_slots": 1228,
+        "live_objects": 0,
+        "retired_slots": 0,
+        "reused_slots": 372
+      },
+      "gc_cumulative_ms": 3.5605,
+      "gc_cycles": 4,
+      "gc_mark_total_ms": 2.6652,
+      "gc_pause_max_ms": 1.5253,
+      "gc_pause_p95_ms": 1.5253,
+      "gc_sweep_total_ms": 0.7617,
+      "manual_gc_policy": "none",
+      "runs": 100,
+      "runs_per_second": 7351.157439738887,
+      "sampled_peak_capacity": 1228,
+      "sampled_peak_live_objects": 1064,
+      "wall_ms": 13.6033
+    },
+    {
+      "auto_gc": false,
+      "batch_size": 100,
+      "final_heap": {
+        "allocations": 1600,
+        "by_type": {
+          "Continuation": 0,
+          "Run": 0,
+          "Task": 0,
+          "Value": 0
+        },
+        "capacity": 1600,
+        "free_slots": 1600,
+        "live_objects": 0,
+        "retired_slots": 0,
+        "reused_slots": 0
+      },
+      "gc_cumulative_ms": 0.6335,
+      "gc_cycles": 1,
+      "gc_mark_total_ms": 0.0047,
+      "gc_pause_max_ms": 0.6335,
+      "gc_pause_p95_ms": 0.6335,
+      "gc_sweep_total_ms": 0.6283000000000001,
+      "manual_gc_policy": "after each batch and retention expiration",
+      "runs": 100,
+      "runs_per_second": 9563.703831219755,
+      "sampled_peak_capacity": 1600,
+      "sampled_peak_live_objects": 1600,
+      "wall_ms": 10.4562
+    },
+    {
+      "auto_gc": true,
+      "batch_size": 100,
+      "final_heap": {
+        "allocations": 16000,
+        "by_type": {
+          "Continuation": 0,
+          "Run": 0,
+          "Task": 0,
+          "Value": 0
+        },
+        "capacity": 1228,
+        "free_slots": 1228,
+        "live_objects": 0,
+        "retired_slots": 0,
+        "reused_slots": 14772
+      },
+      "gc_cumulative_ms": 14.649599999999998,
+      "gc_cycles": 40,
+      "gc_mark_total_ms": 4.1995000000000005,
+      "gc_pause_max_ms": 2.7106,
+      "gc_pause_p95_ms": 0.9972,
+      "gc_sweep_total_ms": 9.241400000000004,
+      "manual_gc_policy": "none",
+      "runs": 1000,
+      "runs_per_second": 4669.0332439836,
+      "sampled_peak_capacity": 1228,
+      "sampled_peak_live_objects": 1064,
+      "wall_ms": 214.1771
+    },
+    {
+      "auto_gc": false,
+      "batch_size": 100,
+      "final_heap": {
+        "allocations": 16000,
+        "by_type": {
+          "Continuation": 0,
+          "Run": 0,
+          "Task": 0,
+          "Value": 0
+        },
+        "capacity": 1600,
+        "free_slots": 1600,
+        "live_objects": 0,
+        "retired_slots": 0,
+        "reused_slots": 14400
+      },
+      "gc_cumulative_ms": 6.0703000000000005,
+      "gc_cycles": 10,
+      "gc_mark_total_ms": 0.0656,
+      "gc_pause_max_ms": 0.8180000000000001,
+      "gc_pause_p95_ms": 0.8180000000000001,
+      "gc_sweep_total_ms": 6.000700000000001,
+      "manual_gc_policy": "after each batch and retention expiration",
+      "runs": 1000,
+      "runs_per_second": 10176.760146993123,
+      "sampled_peak_capacity": 1600,
+      "sampled_peak_live_objects": 1600,
+      "wall_ms": 98.26310000000001
+    },
+    {
+      "auto_gc": true,
+      "batch_size": 100,
+      "final_heap": {
+        "allocations": 160000,
+        "by_type": {
+          "Continuation": 0,
+          "Run": 0,
+          "Task": 0,
+          "Value": 0
+        },
+        "capacity": 1228,
+        "free_slots": 1228,
+        "live_objects": 0,
+        "retired_slots": 0,
+        "reused_slots": 158772
+      },
+      "gc_cumulative_ms": 106.51699999999994,
+      "gc_cycles": 400,
+      "gc_mark_total_ms": 38.13590000000001,
+      "gc_pause_max_ms": 3.0807,
+      "gc_pause_p95_ms": 0.5963,
+      "gc_sweep_total_ms": 58.098000000000006,
+      "manual_gc_policy": "none",
+      "runs": 10000,
+      "runs_per_second": 11219.068467282279,
+      "sampled_peak_capacity": 1228,
+      "sampled_peak_live_objects": 1064,
+      "wall_ms": 891.3396
+    },
+    {
+      "auto_gc": false,
+      "batch_size": 100,
+      "final_heap": {
+        "allocations": 160000,
+        "by_type": {
+          "Continuation": 0,
+          "Run": 0,
+          "Task": 0,
+          "Value": 0
+        },
+        "capacity": 1600,
+        "free_slots": 1600,
+        "live_objects": 0,
+        "retired_slots": 0,
+        "reused_slots": 158400
+      },
+      "gc_cumulative_ms": 49.4992,
+      "gc_cycles": 100,
+      "gc_mark_total_ms": 0.9479000000000003,
+      "gc_pause_max_ms": 1.8606,
+      "gc_pause_p95_ms": 0.7982,
+      "gc_sweep_total_ms": 48.51829999999998,
+      "manual_gc_policy": "after each batch and retention expiration",
+      "runs": 10000,
+      "runs_per_second": 13483.83995491004,
+      "sampled_peak_capacity": 1600,
+      "sampled_peak_live_objects": 1600,
+      "wall_ms": 741.6285
+    }
+  ],
+  "timing": "Instant wall clock, includes JSON command/response serialization and bounded diagnostics sampling"
+}

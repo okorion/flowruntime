@@ -1,0 +1,23 @@
+[package]
+name = "flowruntime-engine"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "A deterministic workflow runtime with an explicit generational tracing heap"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "=0.2.129"
+web-sys = { version = "0.3.106", features = ["Window", "Performance"] }
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
