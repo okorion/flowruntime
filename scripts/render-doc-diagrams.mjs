@@ -21,10 +21,50 @@ function heading(m,num,title,lines,tag){
  else{t(x,99,lines.join(' '),14,p.muted);b.push(`<path d="M40 120H760" stroke="${p.line}"/>`);b.push('<g transform="translate(-383 100)">');}
 }
 
+function browserIcon(x,y){
+ r(x,y,160,100);b.push(`<path d="M${x} ${y+22}h160" stroke="${p.line}"/>`);[0,1,2].forEach(i=>dot(x+12+i*10,y+11,p.blue));
+ r(x+16,y+43,34,30,p.soft,p.blue,5);r(x+111,y+43,34,30,p.soft,p.cyan,5);arrow(x+57,y+58,x+104,y+58);t(x+16,y+90,'Workflow',11,p.muted);
+}
+function chipIcon(x,y){
+ for(let i=0;i<4;i++)b.push(`<path d="M${x-8} ${y+17+i*20}h8 M${x+100} ${y+17+i*20}h8 M${x+20+i*20} ${y-8}v8 M${x+20+i*20} ${y+94}v8" stroke="${p.cyan}" stroke-width="2"/>`);
+ r(x,y,100,94,p.card,p.cyan,10);r(x+10,y+10,80,74,p.soft,p.line,6);t(x+50,y+43,'Rust',20,p.cyan,650,'middle');t(x+50,y+67,'WASM',13,p.muted,500,'middle');
+}
+function heapIcon(x,y,w=206){
+ r(x,y,w,98,p.soft,p.violet,8);const sw=(w-32)/4;
+ for(let i=0;i<4;i++){r(x+10+i*(sw+4),y+17,sw,49,p.card,p.violet,4);t(x+10+i*(sw+4)+sw/2,y+47,i===3?'空'.replace('空','빈칸'):String(i),11,p.violet,500,'middle');}
+ for(let i=0;i<6;i++)r(x+12+i*(w-24)/6,y+98,14,8,p.violet,p.violet,1);
+}
 function architecture(m){
- start(m?420:1200,m?650:380,'FlowRuntime 아키텍처','React의 JSON 명령을 WASM으로 전달합니다. Rust 엔진이 객체와 GC를 관리하고 완료 기록을 별도 복사합니다.');heading(m,'01 / ARCHITECTURE','FlowRuntime',['화면에서 실행하고,','Rust/WASM에서 객체를 관리합니다.'],'LOCAL-FIRST');
- if(m){node(26,166,368,82,'React · 화면',['Workflow 편집 / 결과 / 개발자 도구']);arrow(210,252,210,280);t(226,271,'JSON · wasm-bindgen',11,p.muted);node(26,288,368,82,'Rust · WASM',['정의 검증 / 노드 실행 / 가상 시간'],p.cyan);arrow(210,374,210,402,p.cyan);node(26,410,368,82,'Heap + GC',['객체 저장 → Root 추적 → 회수 → 재사용'],p.violet);node(26,530,368,82,'완료 기록',['별도 복사본 · 객체 회수 후에도 결과 조회'],p.green);t(26,634,'최근 100개 · JSON 합계 8 MiB',11,p.muted)}
- else{t(434,77,'실행 흐름',12,p.muted,600);dot(1128,72,p.green,true);node(434,103,190,96,'React',['Workflow 편집','결과 / 개발자 도구']);node(687,103,190,96,'Rust · WASM',['정의 검증 / 실행','가상 시간 스케줄링'],p.cyan);node(940,103,190,96,'Heap + GC',['객체 저장 / 참조 추적','회수 / 슬롯 재사용'],p.violet);arrow(631,146,679,146);t(655,130,'JSON',10,p.muted,650,'middle');arrow(884,146,932,146,p.cyan);t(907,130,'할당',10,p.muted,650,'middle');arrow(782,205,782,238,p.green);t(795,228,'완료 시 복사',11,p.green);r(434,246,696,60,p.soft,p.line,14);t(453,270,'완료 기록',13,p.green,750);t(453,291,'결과 / Task / 실행 정의',12,p.muted);t(1108,270,'GC 이후에도 조회 가능',13,p.ink,650,'end');t(1108,291,'최근 100개 · JSON 합계 8 MiB',11,p.muted,500,'end');t(410,357,'BRIDGE  wasm-bindgen · JSON 명령 / 조회 응답',11,p.muted)}
+ start(m?420:1200,m?875:520,'브라우저 안의 실행 구조','React 화면이 Rust WASM 엔진을 호출합니다. 엔진 내부의 Managed Heap과 GC가 실행 객체를 관리하고 완료 기록은 별도로 보관합니다.');
+ heading(m,'01 / ARCHITECTURE','브라우저 안의 실행 구조',['화면에서 조작하고, 엔진에서 실행·정리합니다.'],'');
+ if(!m)b.push('</g><g>');
+ if(m){
+  r(18,150,384,659,p.card,p.line,14);t(34,178,'브라우저',14,p.ink,650);browserIcon(130,200);t(210,326,'React · 편집과 결과 조회',14,p.ink,650,'middle');arrow(210,344,210,385);t(225,370,'JSON',11,p.muted);
+  r(34,396,352,386,p.soft,p.cyan,12);t(50,425,'Rust / WASM 영역',14,p.cyan,650);chipIcon(60,462);heapIcon(204,460,162);arrow(172,508,194,508,p.violet);
+  t(60,596,'실행 엔진',15,p.ink,650);t(60,619,'노드 처리 · 시간 제어',11,p.muted);t(204,596,'Managed Heap',14,p.violet,650);t(204,619,'Root 추적 · GC 회수',11,p.muted);
+  r(50,662,320,89,p.card,p.line,10);t(66,691,'완료 기록 · 별도 복사본',15,p.green,650);t(66,716,'객체 회수 후에도 결과 조회',12,p.muted);t(66,738,'최근 100개 · JSON 합계 8 MiB',11,p.muted);
+  t(26,840,'칩·메모리 모양은 소프트웨어 역할을 나타냅니다.',11,p.muted);
+ }else{
+  r(30,149,740,392,p.card,p.line,14);t(48,179,'브라우저 · 별도 서버 없이 실행',14,p.ink,650);
+  r(290,195,460,324,p.soft,p.cyan,12);t(308,222,'Rust / WASM 영역',14,p.cyan,650);
+  browserIcon(55,258);chipIcon(322,270);heapIcon(512,265);arrow(228,310,300,310);t(249,294,'JSON',11,p.muted);arrow(436,310,499,310,p.violet);
+  t(55,400,'React 화면',16,p.ink,650);t(55,425,'편집 · 실행 · 결과 조회',12,p.muted);t(322,400,'실행 엔진',16,p.ink,650);t(322,425,'노드 처리 · 시간 제어',12,p.muted);t(512,400,'Managed Heap',16,p.violet,650);t(512,425,'Root 추적 · GC 회수',12,p.muted);
+  r(308,450,424,50,p.card,p.line,8);t(324,473,'완료 기록',13,p.green,650);t(425,473,'객체 회수 후에도 결과 조회',12,p.muted);t(324,491,'최근 100개 · JSON 합계 8 MiB의 별도 복사본',11,p.muted);
+  t(40,577,'경계는 소프트웨어의 실행 위치를, 칩·메모리 모양은 역할을 나타냅니다.',12,p.muted);
+ }
+}
+function memoryInside(m){
+ start(m?420:1200,m?650:425,'Heap 내부의 GC 전후','동일한 슬롯의 GC 전후 예시입니다. Root에서 닿는 0번과 1번은 유지하고 닿지 않는 2번과 3번의 객체를 회수합니다. 4번과 5번은 이미 비어 있습니다.');
+ heading(m,'DETAIL / MANAGED HEAP','같은 슬롯의 GC 전후',['아키텍처의 Managed Heap을 확대했습니다.'],'');if(!m)b.push('</g><g>');
+ const x=m?38:180,step=m?57:87,w=m?48:72,top=m?202:202;
+ t(m?26:40,top-30,'GC 전',17,p.ink,650);t(m?26:180,top-9,'Root → 0 → 1 연결 · 2, 3은 도달 불가',12,p.muted);
+ for(let row=0;row<2;row++)for(let i=0;i<6;i++){
+  const c=i<2?p.green:row===0&&i<4?p.orange:p.line, y=top+row*(m?201:171);
+  r(x+i*step,y,w,80,p.card,c,6);t(x+i*step+w/2,y+31,i<2?['Run','Task'][i]:row===0&&i<4?'객체':'빈칸',12,i<2?p.green:row===0&&i<4?p.orange:p.muted,500,'middle');t(x+i*step+w/2,y+61,String(i),11,p.muted,500,'middle');
+ }
+ arrow(m?210:420,top+92,m?210:420,top+(m?148:126),p.violet);t(m?230:445,top+117,'Mark → Sweep',12,p.violet);
+ t(m?26:40,top+(m?178:149),'GC 후',17,p.ink,650);t(m?26:180,top+(m?300:283),'0, 1 유지 · 2, 3 회수 · 빈 슬롯은 다음 실행에 재사용',m?11:12,p.muted);
+ if(m)t(26,608,'슬롯 번호·객체 배치는 설명용 예시입니다.',11,p.muted);
 }
 function objects(m){
  start(m?420:1200,m?620:410,'런타임 객체의 참조','Run은 실행 한 번, Task는 노드 처리, Value는 JSON 값, Continuation은 다음 작업을 이어 갈 정보입니다. 주요 참조만 표시합니다.');heading(m,'02 / RUNTIME OBJECTS','실행을 잇는 객체',['Run은 Task를 알고,','Task도 자신의 Run을 참조합니다.'],'STRONG REFERENCES');
@@ -66,7 +106,7 @@ function overview(m){
   t(434,403,'완료 기록과 작업 공간은 분리되어 있어, 객체 회수 후에도 결과를 볼 수 있습니다.',12,p.muted);
  }
 }
-const diagrams={overview,architecture,objects,'gc-cycle':gc,'gc-implementation':implementation};
+const diagrams={overview,architecture,'memory-inside':memoryInside,objects,'gc-cycle':gc,'gc-implementation':implementation};
 for(const theme of Object.keys(themes))for(const m of [false,true])for(const [name,render] of Object.entries(diagrams)){
  p=themes[theme];render(m);if(desktop)b.push('</g>');b.push('</svg>');const svg=b.join('\n')+'\n',stem=`${out}${name}${m?'-mobile':''}-${theme}`;
  writeFileSync(`${stem}.svg`,svg);

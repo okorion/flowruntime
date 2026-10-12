@@ -43,4 +43,13 @@
   <source media="(max-width: 600px)" srcset="diagrams/gc-implementation-mobile-light.svg" />
   <source media="(prefers-color-scheme: dark)" srcset="diagrams/gc-implementation-dark.svg" />
   <img alt="GC 구현과 슬롯 재사용" src="diagrams/gc-implementation-light.svg" width="100%" />
-</picture></section><p>그림은 코드 기반 개념도입니다. 5초는 가상 시간이며 슬롯 번호는 예시입니다. Root에는 실행 중·보존 기간·Pin한 Run과 스케줄러의 Continuation이 포함됩니다. 별도 완료 기록은 최근 100개·JSON 8 MiB까지 보관합니다.</p></main></html>
+</picture></section><p>그림은 코드 기반 개념도입니다. 5초는 가상 시간이며 슬롯 번호는 예시입니다. Root에는 실행 중·보존 기간·Pin한 Run과 스케줄러의 Continuation이 포함됩니다. 별도 완료 기록은 최근 100개·JSON 8 MiB까지 보관합니다.</p><section><picture>
+  <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: dark) and (max-width: 600px)" srcset="diagrams/memory-inside-mobile-dark-still.svg" />
+  <source media="(prefers-reduced-motion: reduce) and (max-width: 600px)" srcset="diagrams/memory-inside-mobile-light-still.svg" />
+  <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: dark)" srcset="diagrams/memory-inside-dark-still.svg" />
+  <source media="(prefers-reduced-motion: reduce)" srcset="diagrams/memory-inside-light-still.svg" />
+  <source media="(prefers-color-scheme: dark) and (max-width: 600px)" srcset="diagrams/memory-inside-mobile-dark.svg" />
+  <source media="(max-width: 600px)" srcset="diagrams/memory-inside-mobile-light.svg" />
+  <source media="(prefers-color-scheme: dark)" srcset="diagrams/memory-inside-dark.svg" />
+  <img alt="Managed Heap 확대: GC 전후 동일 슬롯에서 유지되는 객체와 회수되어 빈자리가 되는 객체" src="diagrams/memory-inside-light.svg" width="100%" />
+</picture></section></main></html>

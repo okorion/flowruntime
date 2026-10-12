@@ -47,7 +47,7 @@
   <img alt="전체 구조" src="docs/diagrams/architecture-light.svg" width="100%" />
 </picture>
 
-React는 편집·조작·표시를 맡고, Rust/WASM은 노드 실행과 객체 수명을 관리합니다. 실행에는 백엔드가 필요하지 않습니다. 편집한 Workflow 정의는 브라우저에 저장됩니다.
+브라우저 창은 **React 화면**, 칩은 **실행 엔진**, 메모리 모양은 **Managed Heap**을 나타냅니다. 큰 경계는 브라우저, 안쪽 경계는 Rust/WASM의 실행 영역입니다. React는 편집·조작·표시를 맡고, Rust/WASM은 노드 실행과 객체 수명을 관리합니다. 실행에는 백엔드가 필요하지 않습니다. 편집한 Workflow 정의는 브라우저에 저장됩니다.
 
 <details>
 <summary>한 단계 더 보기 · 실행 중에는 어떤 객체가 생길까요?</summary>
@@ -84,6 +84,21 @@ Workflow의 화살표는 **노드 실행 순서**, Heap의 화살표는 **객체
 보존할 시작점(Root)은 **진행 중인 실행, 완료 후 5초 이내의 실행, Pin한 실행, 다음 작업을 기다리는 정보**입니다. 코드에서는 실행 한 번을 `Run`, 다음 작업을 이어 갈 정보를 `Continuation`이라고 부릅니다. 5초는 엔진의 가상 시간 기준이며, GC는 이 시작점에서 참조를 따라 닿는 객체를 남깁니다.
 
 서로 참조하는 객체라도 Root와 연결이 끊기면 함께 회수됩니다. **객체끼리 연결되어 있는지보다, 보존할 시작점에서 닿을 수 있는지가 기준입니다.**
+
+### Heap 안에서는 무엇이 달라질까요?
+
+<picture>
+  <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: dark) and (max-width: 600px)" srcset="docs/diagrams/memory-inside-mobile-dark-still.svg" />
+  <source media="(prefers-reduced-motion: reduce) and (max-width: 600px)" srcset="docs/diagrams/memory-inside-mobile-light-still.svg" />
+  <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: dark)" srcset="docs/diagrams/memory-inside-dark-still.svg" />
+  <source media="(prefers-reduced-motion: reduce)" srcset="docs/diagrams/memory-inside-light-still.svg" />
+  <source media="(prefers-color-scheme: dark) and (max-width: 600px)" srcset="docs/diagrams/memory-inside-mobile-dark.svg" />
+  <source media="(max-width: 600px)" srcset="docs/diagrams/memory-inside-mobile-light.svg" />
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/memory-inside-dark.svg" />
+  <img alt="Managed Heap 확대: GC 전후 동일 슬롯에서 유지되는 객체와 회수되어 빈자리가 되는 객체" src="docs/diagrams/memory-inside-light.svg" width="100%" />
+</picture>
+
+같은 슬롯을 위아래로 비교해 보세요. **Root에서 닿는 0·1번은 유지**되고, **닿지 않는 2·3번은 빈칸**이 됩니다. 객체를 한쪽으로 옮기는 과정이 아니라, 해당 슬롯을 비워 다음 할당에 재사용하는 과정입니다. 번호와 배치는 설명용 예시입니다.
 
 <details>
 <summary>코드로 더 보기 · Root → Mark → Sweep과 슬롯 재사용</summary>
