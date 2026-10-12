@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="410" viewBox="0 0 1200 410" role="img" aria-labelledby="title desc"><title id="title">런타임 객체의 참조</title><desc id="desc">Run은 실행 한 번, Task는 노드 처리, Value는 JSON 값, Continuation은 다음 작업을 이어 갈 정보입니다. 주요 참조만 표시합니다.</desc><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#f8fbff"/><stop offset="1" stop-color="#f4f1ff"/></linearGradient><linearGradient id="accent"><stop stop-color="#2563eb"/><stop offset=".5" stop-color="#008da5"/><stop offset="1" stop-color="#7c3aed"/></linearGradient><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#2563eb" stroke-opacity=".035"/></pattern><filter id="shadow" x="-20%" y="-30%" width="140%" height="170%"><feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="#34558c" flood-opacity=".07"/></filter></defs><style>text{font-family:'Segoe UI','Malgun Gothic','Apple SD Gothic Neo',sans-serif}.flow{animation:none}.pulse{animation:none}@keyframes flow{to{stroke-dashoffset:-18}}@keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}@media(prefers-reduced-motion:reduce){.flow,.pulse{animation:none}}</style><rect width="1200" height="410" rx="24" fill="url(#bg)"/><rect width="1200" height="410" rx="24" fill="url(#grid)"/>
+<text x="44" y="55" font-size="10" fill="#2563eb" font-weight="800" text-anchor="start" letter-spacing="1.7">FLOWRUNTIME / 02 / RUNTIME OBJECTS</text>
+<text x="44" y="126" font-size="32" fill="#17243b" font-weight="800" text-anchor="start" letter-spacing="-0.8">실행을 잇는 객체</text>
+<rect x="44" y="144" width="166" height="3" rx="1.5" fill="url(#accent)"/>
+<text x="44" y="182" font-size="15" fill="#63748c" font-weight="500" text-anchor="start" letter-spacing="0">Run은 Task를 알고,</text>
+<text x="44" y="207" font-size="15" fill="#63748c" font-weight="500" text-anchor="start" letter-spacing="0">Task도 자신의 Run을 참조합니다.</text>
+<rect x="44" y="304" width="145.5" height="26" rx="13" fill="#fff" stroke="#dce5f2"/>
+<circle cx="56" cy="317" r="3" fill="#7c3aed"/>
+<text x="67" y="321" font-size="10" fill="#7c3aed" font-weight="750" text-anchor="start" letter-spacing="0.6">STRONG REFERENCES</text>
+<rect x="434" y="60" width="260" height="100" rx="14" fill="#fff" stroke="#dce5f2" filter="url(#shadow)"/>
+<circle cx="452" cy="81" r="3" fill="#2563eb"/>
+<text x="464" y="86" font-size="17" fill="#2563eb" font-weight="750" text-anchor="start" letter-spacing="0">Run</text>
+<text x="452" y="113" font-size="13" fill="#63748c" font-weight="500" text-anchor="start" letter-spacing="0">실행 한 번</text>
+<text x="452" y="134" font-size="13" fill="#63748c" font-weight="500" text-anchor="start" letter-spacing="0">Task 목록 / 최종 결과</text>
+<rect x="870" y="60" width="260" height="100" rx="14" fill="#fff" stroke="#dce5f2" filter="url(#shadow)"/>
+<circle cx="888" cy="81" r="3" fill="#008da5"/>
+<text x="900" y="86" font-size="17" fill="#008da5" font-weight="750" text-anchor="start" letter-spacing="0">Task</text>
+<text x="888" y="113" font-size="13" fill="#63748c" font-weight="500" text-anchor="start" letter-spacing="0">노드 하나의 처리</text>
+<text x="888" y="134" font-size="13" fill="#63748c" font-weight="500" text-anchor="start" letter-spacing="0">소속 Run / 입출력</text>
+<rect x="434" y="253" width="260" height="100" rx="14" fill="#fff" stroke="#dce5f2" filter="url(#shadow)"/>
+<circle cx="452" cy="274" r="3" fill="#7c3aed"/>
+<text x="464" y="279" font-size="17" fill="#7c3aed" font-weight="750" text-anchor="start" letter-spacing="0">Value</text>
+<text x="452" y="306" font-size="13" fill="#63748c" font-weight="500" text-anchor="start" letter-spacing="0">입력·출력 데이터</text>
+<text x="452" y="327" font-size="13" fill="#63748c" font-weight="500" text-anchor="start" letter-spacing="0">JSON 값 보관</text>
+<rect x="870" y="253" width="260" height="100" rx="14" fill="#fff" stroke="#dce5f2" filter="url(#shadow)"/>
+<circle cx="888" cy="274" r="3" fill="#b56e12"/>
+<text x="900" y="279" font-size="17" fill="#b56e12" font-weight="750" text-anchor="start" letter-spacing="0">Continuation</text>
+<text x="888" y="306" font-size="13" fill="#63748c" font-weight="500" text-anchor="start" letter-spacing="0">다음 작업을 이어 갈 정보</text>
+<text x="888" y="327" font-size="13" fill="#63748c" font-weight="500" text-anchor="start" letter-spacing="0">재개할 Run / Task / 값</text>
+<path d="M702 99 L862 99" fill="none" stroke="#2563eb" stroke-opacity=".18" stroke-width="1.5"/><path d="M702 99 L862 99" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="3 6" class="flow"/>
+<path d="M856.884852867643 102.13612337358396 L862 99 L856.884852867643 95.86387662641604" fill="none" stroke="#2563eb" stroke-width="1.5"/>
+<text x="782" y="86" font-size="11" fill="#63748c" font-weight="500" text-anchor="middle" letter-spacing="0">Task 목록</text>
+<path d="M862 129 L702 129" fill="none" stroke="#008da5" stroke-opacity=".18" stroke-width="1.5"/><path d="M862 129 L702 129" fill="none" stroke="#008da5" stroke-width="1.5" stroke-dasharray="3 6" class="flow"/>
+<path d="M707.115147132357 125.86387662641604 L702 129 L707.115147132357 132.13612337358396" fill="none" stroke="#008da5" stroke-width="1.5"/>
+<text x="782" y="148" font-size="11" fill="#63748c" font-weight="500" text-anchor="middle" letter-spacing="0">소속 Run</text>
+<path d="M564 168 L564 245" fill="none" stroke="#7c3aed" stroke-opacity=".18" stroke-width="1.5"/><path d="M564 168 L564 245" fill="none" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="3 6" class="flow"/>
+<path d="M560.8638766264161 239.88485286764296 L564 245 L567.1361233735839 239.88485286764296" fill="none" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="578" y="212" font-size="11" fill="#63748c" font-weight="500" text-anchor="start" letter-spacing="0">입력 / 결과</text>
+<path d="M1000 168 L1000 245" fill="none" stroke="#b56e12" stroke-opacity=".18" stroke-width="1.5"/><path d="M1000 168 L1000 245" fill="none" stroke="#b56e12" stroke-width="1.5" stroke-dasharray="3 6" class="flow"/>
+<path d="M996.8638766264161 239.88485286764296 L1000 245 L1003.1361233735839 239.88485286764296" fill="none" stroke="#b56e12" stroke-width="1.5"/>
+<text x="1014" y="212" font-size="11" fill="#63748c" font-weight="500" text-anchor="start" letter-spacing="0">대기 작업</text>
+<path d="M862 303 L702 303" fill="none" stroke="#b56e12" stroke-opacity=".18" stroke-width="1.5"/><path d="M862 303 L702 303" fill="none" stroke="#b56e12" stroke-width="1.5" stroke-dasharray="3 6" class="flow"/>
+<path d="M707.115147132357 299.8638766264161 L702 303 L707.115147132357 306.1361233735839" fill="none" stroke="#b56e12" stroke-width="1.5"/>
+<text x="782" y="287" font-size="11" fill="#63748c" font-weight="500" text-anchor="middle" letter-spacing="0">캡처한 값</text>
+<text x="434" y="386" font-size="12" fill="#63748c" font-weight="500" text-anchor="start" letter-spacing="0">주요 참조만 표시 · Workflow 실행 순서와 객체 참조는 다릅니다.</text>
+</svg>

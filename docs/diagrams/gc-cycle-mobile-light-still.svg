@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="770" viewBox="0 0 420 770" role="img" aria-labelledby="title desc"><title id="title">Root 연결과 GC</title><desc id="desc">Root 연결은 보존, 완료 후 기간 만료와 다른 Root가 없으면 GC가 순환 참조까지 회수합니다. 끊긴 참조는 움직이지 않습니다.</desc><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#f8fbff"/><stop offset="1" stop-color="#f4f1ff"/></linearGradient><linearGradient id="accent"><stop stop-color="#2563eb"/><stop offset=".5" stop-color="#008da5"/><stop offset="1" stop-color="#7c3aed"/></linearGradient><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#2563eb" stroke-opacity=".035"/></pattern><filter id="shadow" x="-20%" y="-30%" width="140%" height="170%"><feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="#34558c" flood-opacity=".07"/></filter></defs><style>text{font-family:'Segoe UI','Malgun Gothic','Apple SD Gothic Neo',sans-serif}.flow{animation:none}.pulse{animation:none}@keyframes flow{to{stroke-dashoffset:-18}}@keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}@media(prefers-reduced-motion:reduce){.flow,.pulse{animation:none}}</style><rect width="420" height="770" rx="24" fill="url(#bg)"/><rect width="420" height="770" rx="24" fill="url(#grid)"/>
+<text x="26" y="32" font-size="10" fill="#2563eb" font-weight="800" text-anchor="start" letter-spacing="1.7">FLOWRUNTIME / 03 / OBJECT LIFETIME</text>
+<text x="26" y="69" font-size="25" fill="#17243b" font-weight="800" text-anchor="start" letter-spacing="-0.8">연결이 수명을 결정</text>
+<rect x="26" y="81" width="96" height="3" rx="1.5" fill="url(#accent)"/>
+<text x="26" y="109" font-size="14" fill="#63748c" font-weight="500" text-anchor="start" letter-spacing="0">Root에서 닿는 객체는 남기고,</text>
+<text x="26" y="134" font-size="14" fill="#63748c" font-weight="500" text-anchor="start" letter-spacing="0">닿지 않는 객체는 회수합니다.</text>
+<rect x="26" y="170" width="368" height="159" rx="18" fill="#fff" stroke="#dce5f2" filter="url(#shadow)"/>
+<text x="44" y="196" font-size="10" fill="#059669" font-weight="800" text-anchor="start" letter-spacing="1">01 KEEP</text>
+<rect x="44" y="216" width="60" height="26" rx="8" fill="#f2f6fc" stroke="#dce5f2"/>
+<text x="74" y="233" font-size="12" fill="#059669" font-weight="750" text-anchor="middle" letter-spacing="0">Root</text>
+<path d="M109 229 H372 V257 H77 V264" fill="none" stroke="#059669" stroke-opacity=".18" stroke-width="1.5"/><path d="M109 229 H372 V257 H77 V264" fill="none" stroke="#059669" stroke-width="1.5" stroke-dasharray="3 6" class="flow"/>
+<rect x="44" y="269" width="68" height="31" rx="8" fill="#f2f6fc" stroke="#dce5f2"/>
+<text x="78" y="289" font-size="13" fill="#2563eb" font-weight="750" text-anchor="middle" letter-spacing="0">Run</text>
+<rect x="308" y="269" width="68" height="31" rx="8" fill="#f2f6fc" stroke="#dce5f2"/>
+<text x="342" y="289" font-size="13" fill="#008da5" font-weight="750" text-anchor="middle" letter-spacing="0">Task</text>
+<text x="210" y="289" font-size="17" fill="#63748c" font-weight="500" text-anchor="middle" letter-spacing="0">⇄</text>
+<path d="M210 334 L210 350" fill="none" stroke="#2563eb" stroke-opacity=".18" stroke-width="1.5"/><path d="M210 334 L210 350" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="3 6" class="flow"/>
+<path d="M206.86387662641604 344.88485286764296 L210 350 L213.13612337358396 344.88485286764296" fill="none" stroke="#2563eb" stroke-width="1.5"/>
+<rect x="26" y="354" width="368" height="159" rx="18" fill="#fff" stroke="#dce5f2" filter="url(#shadow)"/>
+<text x="44" y="380" font-size="10" fill="#b56e12" font-weight="800" text-anchor="start" letter-spacing="1">02 UNREACHABLE</text>
+<rect x="44" y="400" width="60" height="26" rx="8" fill="#f2f6fc" stroke="#dce5f2"/>
+<text x="74" y="417" font-size="12" fill="#b56e12" font-weight="750" text-anchor="middle" letter-spacing="0">Root</text>
+<path d="M109 413 H372 V441 H77 V448" fill="none" stroke="#b56e12" stroke-opacity=".18" stroke-width="1.5"/><path d="M109 413 H372 V441 H77 V448" fill="none" stroke="#b56e12" stroke-width="1.5" stroke-dasharray="3 6"/>
+<text x="210" y="418" font-size="18" fill="#b56e12" font-weight="750" text-anchor="start" letter-spacing="0">×</text>
+<rect x="44" y="453" width="68" height="31" rx="8" fill="#f2f6fc" stroke="#dce5f2"/>
+<text x="78" y="473" font-size="13" fill="#2563eb" font-weight="750" text-anchor="middle" letter-spacing="0">Run</text>
+<rect x="308" y="453" width="68" height="31" rx="8" fill="#f2f6fc" stroke="#dce5f2"/>
+<text x="342" y="473" font-size="13" fill="#008da5" font-weight="750" text-anchor="middle" letter-spacing="0">Task</text>
+<text x="210" y="473" font-size="17" fill="#63748c" font-weight="500" text-anchor="middle" letter-spacing="0">⇄</text>
+<path d="M210 518 L210 534" fill="none" stroke="#2563eb" stroke-opacity=".18" stroke-width="1.5"/><path d="M210 518 L210 534" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="3 6" class="flow"/>
+<path d="M206.86387662641604 528.884852867643 L210 534 L213.13612337358396 528.884852867643" fill="none" stroke="#2563eb" stroke-width="1.5"/>
+<rect x="26" y="538" width="368" height="159" rx="18" fill="#fff" stroke="#dce5f2" filter="url(#shadow)"/>
+<text x="44" y="564" font-size="10" fill="#7c3aed" font-weight="800" text-anchor="start" letter-spacing="1">03 RECLAIM</text>
+<text x="44" y="610" font-size="18" fill="#7c3aed" font-weight="750" text-anchor="start" letter-spacing="0">순환 참조도 회수</text>
+<rect x="44" y="633" width="26" height="26" rx="6" fill="#f2f6fc" stroke="#dce5f2"/>
+<rect x="79" y="633" width="26" height="26" rx="6" fill="#f2f6fc" stroke="#dce5f2"/>
+<rect x="114" y="633" width="26" height="26" rx="6" fill="#f2f6fc" stroke="#dce5f2"/>
+<rect x="149" y="633" width="26" height="26" rx="6" fill="#f2f6fc" stroke="#dce5f2"/>
+<rect x="184" y="633" width="26" height="26" rx="6" fill="#f2f6fc" stroke="#dce5f2"/>
+<text x="44" y="682" font-size="12" fill="#63748c" font-weight="500" text-anchor="start" letter-spacing="0">빈 슬롯을 다음 실행에 재사용</text>
+<text x="26" y="741" font-size="11" fill="#63748c" font-weight="500" text-anchor="start" letter-spacing="0">완료 후 가상 시간 5초 · Pin 해제 · 다른 Root 없음</text>
+</svg>

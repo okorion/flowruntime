@@ -8,11 +8,15 @@
 
 **주문 분류 → 실행하기 → 실행 결과** 순서로 누릅니다. 입력의 금액 `amount`가 1,250이면 `manual_review`, 300이면 `approved`가 됩니다.
 
-아래 그림은 실제 코드의 역할과 흐름을 단순화한 **개념도**입니다. 슬롯 번호는 설명용 예시입니다.
+아래 그림은 실제 코드의 역할과 흐름을 단순화한 **개념도**입니다. 움직이는 선은 명령과 참조의 방향을 보여주며, 끊긴 참조는 정지해 있습니다. 슬롯 번호는 설명용 예시입니다.
 
 ## 01 · 전체 구조
 
 <picture>
+  <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: dark) and (max-width: 600px)" srcset="docs/diagrams/architecture-mobile-dark-still.svg" />
+  <source media="(prefers-reduced-motion: reduce) and (max-width: 600px)" srcset="docs/diagrams/architecture-mobile-light-still.svg" />
+  <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: dark)" srcset="docs/diagrams/architecture-dark-still.svg" />
+  <source media="(prefers-reduced-motion: reduce)" srcset="docs/diagrams/architecture-light-still.svg" />
   <source media="(prefers-color-scheme: dark) and (max-width: 600px)" srcset="docs/diagrams/architecture-mobile-dark.svg" />
   <source media="(max-width: 600px)" srcset="docs/diagrams/architecture-mobile-light.svg" />
   <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/architecture-dark.svg" />
@@ -24,6 +28,10 @@ React는 편집·조작·표시를 맡고, Rust/WASM은 노드 실행과 객체 
 ## 02 · 실행할 때 무엇이 생길까요?
 
 <picture>
+  <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: dark) and (max-width: 600px)" srcset="docs/diagrams/objects-mobile-dark-still.svg" />
+  <source media="(prefers-reduced-motion: reduce) and (max-width: 600px)" srcset="docs/diagrams/objects-mobile-light-still.svg" />
+  <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: dark)" srcset="docs/diagrams/objects-dark-still.svg" />
+  <source media="(prefers-reduced-motion: reduce)" srcset="docs/diagrams/objects-light-still.svg" />
   <source media="(prefers-color-scheme: dark) and (max-width: 600px)" srcset="docs/diagrams/objects-mobile-dark.svg" />
   <source media="(max-width: 600px)" srcset="docs/diagrams/objects-mobile-light.svg" />
   <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/objects-dark.svg" />
@@ -35,6 +43,10 @@ Workflow의 화살표는 **노드 실행 순서**, Heap의 화살표는 **객체
 ## 03 · 언제 남기고, 언제 지울까요?
 
 <picture>
+  <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: dark) and (max-width: 600px)" srcset="docs/diagrams/gc-cycle-mobile-dark-still.svg" />
+  <source media="(prefers-reduced-motion: reduce) and (max-width: 600px)" srcset="docs/diagrams/gc-cycle-mobile-light-still.svg" />
+  <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: dark)" srcset="docs/diagrams/gc-cycle-dark-still.svg" />
+  <source media="(prefers-reduced-motion: reduce)" srcset="docs/diagrams/gc-cycle-light-still.svg" />
   <source media="(prefers-color-scheme: dark) and (max-width: 600px)" srcset="docs/diagrams/gc-cycle-mobile-dark.svg" />
   <source media="(max-width: 600px)" srcset="docs/diagrams/gc-cycle-mobile-light.svg" />
   <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/gc-cycle-dark.svg" />
@@ -48,6 +60,10 @@ Root는 **실행 중인 Run, 완료 후 5초 이내 Run, Pin한 Run, 스케줄�
 ## 04 · 코드에서는 어떻게 구현할까요?
 
 <picture>
+  <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: dark) and (max-width: 600px)" srcset="docs/diagrams/gc-implementation-mobile-dark-still.svg" />
+  <source media="(prefers-reduced-motion: reduce) and (max-width: 600px)" srcset="docs/diagrams/gc-implementation-mobile-light-still.svg" />
+  <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: dark)" srcset="docs/diagrams/gc-implementation-dark-still.svg" />
+  <source media="(prefers-reduced-motion: reduce)" srcset="docs/diagrams/gc-implementation-light-still.svg" />
   <source media="(prefers-color-scheme: dark) and (max-width: 600px)" srcset="docs/diagrams/gc-implementation-mobile-dark.svg" />
   <source media="(max-width: 600px)" srcset="docs/diagrams/gc-implementation-mobile-light.svg" />
   <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/gc-implementation-dark.svg" />

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="380" viewBox="0 0 1200 380" role="img" aria-labelledby="title desc"><title id="title">FlowRuntime 아키텍처</title><desc id="desc">React의 JSON 명령을 WASM으로 전달합니다. Rust 엔진이 객체와 GC를 관리하고 완료 기록을 별도 복사합니다.</desc><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#101a2c"/><stop offset="1" stop-color="#201d38"/></linearGradient><linearGradient id="accent"><stop stop-color="#82acff"/><stop offset=".5" stop-color="#5ed3e2"/><stop offset="1" stop-color="#ba99ff"/></linearGradient><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#82acff" stroke-opacity=".035"/></pattern><filter id="shadow" x="-20%" y="-30%" width="140%" height="170%"><feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="#000" flood-opacity=".07"/></filter></defs><style>text{font-family:'Segoe UI','Malgun Gothic','Apple SD Gothic Neo',sans-serif}.flow{animation:none}.pulse{animation:none}@keyframes flow{to{stroke-dashoffset:-18}}@keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}@media(prefers-reduced-motion:reduce){.flow,.pulse{animation:none}}</style><rect width="1200" height="380" rx="24" fill="url(#bg)"/><rect width="1200" height="380" rx="24" fill="url(#grid)"/>
+<text x="44" y="55" font-size="10" fill="#82acff" font-weight="800" text-anchor="start" letter-spacing="1.7">FLOWRUNTIME / 01 / ARCHITECTURE</text>
+<text x="44" y="126" font-size="32" fill="#f0f5ff" font-weight="800" text-anchor="start" letter-spacing="-0.8">FlowRuntime</text>
+<rect x="44" y="144" width="166" height="3" rx="1.5" fill="url(#accent)"/>
+<text x="44" y="182" font-size="15" fill="#a7b7cf" font-weight="500" text-anchor="start" letter-spacing="0">화면에서 실행하고,</text>
+<text x="44" y="207" font-size="15" fill="#a7b7cf" font-weight="500" text-anchor="start" letter-spacing="0">Rust/WASM에서 객체를 관리합니다.</text>
+<rect x="44" y="304" width="106.5" height="26" rx="13" fill="#1a273d" stroke="#354662"/>
+<circle cx="56" cy="317" r="3" fill="#ba99ff"/>
+<text x="67" y="321" font-size="10" fill="#ba99ff" font-weight="750" text-anchor="start" letter-spacing="0.6">LOCAL-FIRST</text>
+<rect x="410" y="48" width="746" height="284" rx="22" fill="#1a273d" stroke="#354662" filter="url(#shadow)"/>
+<text x="434" y="77" font-size="10" fill="#a7b7cf" font-weight="800" text-anchor="start" letter-spacing="1.4">EXECUTION / MEMORY</text>
+<circle cx="1128" cy="72" r="3" fill="#65d6b0" class="pulse"/>
+<rect x="434" y="103" width="190" height="96" rx="14" fill="#1a273d" stroke="#354662" filter="url(#shadow)"/>
+<circle cx="452" cy="124" r="3" fill="#82acff"/>
+<text x="464" y="129" font-size="17" fill="#82acff" font-weight="750" text-anchor="start" letter-spacing="0">React</text>
+<text x="452" y="156" font-size="13" fill="#a7b7cf" font-weight="500" text-anchor="start" letter-spacing="0">Workflow 편집</text>
+<text x="452" y="177" font-size="13" fill="#a7b7cf" font-weight="500" text-anchor="start" letter-spacing="0">결과 / 개발자 도구</text>
+<rect x="687" y="103" width="190" height="96" rx="14" fill="#1a273d" stroke="#354662" filter="url(#shadow)"/>
+<circle cx="705" cy="124" r="3" fill="#5ed3e2"/>
+<text x="717" y="129" font-size="17" fill="#5ed3e2" font-weight="750" text-anchor="start" letter-spacing="0">Rust · WASM</text>
+<text x="705" y="156" font-size="13" fill="#a7b7cf" font-weight="500" text-anchor="start" letter-spacing="0">정의 검증 / 실행</text>
+<text x="705" y="177" font-size="13" fill="#a7b7cf" font-weight="500" text-anchor="start" letter-spacing="0">가상 시간 스케줄링</text>
+<rect x="940" y="103" width="190" height="96" rx="14" fill="#1a273d" stroke="#354662" filter="url(#shadow)"/>
+<circle cx="958" cy="124" r="3" fill="#ba99ff"/>
+<text x="970" y="129" font-size="17" fill="#ba99ff" font-weight="750" text-anchor="start" letter-spacing="0">Heap + GC</text>
+<text x="958" y="156" font-size="13" fill="#a7b7cf" font-weight="500" text-anchor="start" letter-spacing="0">객체 저장 / 참조 추적</text>
+<text x="958" y="177" font-size="13" fill="#a7b7cf" font-weight="500" text-anchor="start" letter-spacing="0">회수 / 슬롯 재사용</text>
+<path d="M631 146 L679 146" fill="none" stroke="#82acff" stroke-opacity=".18" stroke-width="1.5"/><path d="M631 146 L679 146" fill="none" stroke="#82acff" stroke-width="1.5" stroke-dasharray="3 6" class="flow"/>
+<path d="M673.884852867643 149.13612337358396 L679 146 L673.884852867643 142.86387662641604" fill="none" stroke="#82acff" stroke-width="1.5"/>
+<text x="655" y="130" font-size="10" fill="#a7b7cf" font-weight="650" text-anchor="middle" letter-spacing="0">JSON</text>
+<path d="M884 146 L932 146" fill="none" stroke="#5ed3e2" stroke-opacity=".18" stroke-width="1.5"/><path d="M884 146 L932 146" fill="none" stroke="#5ed3e2" stroke-width="1.5" stroke-dasharray="3 6" class="flow"/>
+<path d="M926.884852867643 149.13612337358396 L932 146 L926.884852867643 142.86387662641604" fill="none" stroke="#5ed3e2" stroke-width="1.5"/>
+<text x="907" y="130" font-size="10" fill="#a7b7cf" font-weight="650" text-anchor="middle" letter-spacing="0">할당</text>
+<path d="M782 205 L782 238" fill="none" stroke="#65d6b0" stroke-opacity=".18" stroke-width="1.5"/><path d="M782 205 L782 238" fill="none" stroke="#65d6b0" stroke-width="1.5" stroke-dasharray="3 6" class="flow"/>
+<path d="M778.8638766264161 232.88485286764296 L782 238 L785.1361233735839 232.88485286764296" fill="none" stroke="#65d6b0" stroke-width="1.5"/>
+<text x="795" y="228" font-size="11" fill="#65d6b0" font-weight="500" text-anchor="start" letter-spacing="0">완료 시 복사</text>
+<rect x="434" y="246" width="696" height="60" rx="14" fill="#22324b" stroke="#354662"/>
+<text x="453" y="270" font-size="13" fill="#65d6b0" font-weight="750" text-anchor="start" letter-spacing="0">완료 기록</text>
+<text x="453" y="291" font-size="12" fill="#a7b7cf" font-weight="500" text-anchor="start" letter-spacing="0">결과 / Task / 실행 정의</text>
+<text x="1108" y="270" font-size="13" fill="#f0f5ff" font-weight="650" text-anchor="end" letter-spacing="0">GC 이후에도 조회 가능</text>
+<text x="1108" y="291" font-size="11" fill="#a7b7cf" font-weight="500" text-anchor="end" letter-spacing="0">최근 100개 · JSON 합계 8 MiB</text>
+<text x="410" y="357" font-size="11" fill="#a7b7cf" font-weight="500" text-anchor="start" letter-spacing="0">BRIDGE  wasm-bindgen · JSON 명령 / 조회 응답</text>
+</svg>

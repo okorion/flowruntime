@@ -1,34 +1,40 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="640" viewBox="0 0 960 640" role="img" aria-labelledby="title desc"><title id="title">GC 구현과 슬롯 재사용</title><desc id="desc">Root를 모으고, 참조를 따라 Mark한 뒤, 표시되지 않은 객체를 Sweep합니다. 예시 슬롯 7의 Generation은 1에서 2로 바뀌며 예전 Handle 7:1은 거부됩니다.</desc><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#101927"/><stop offset="1" stop-color="#191a32"/></linearGradient><pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#91b6ff" stroke-opacity=".055"/></pattern></defs><style>text{font-family:'Malgun Gothic','Apple SD Gothic Neo','Segoe UI',sans-serif}</style><rect width="960" height="640" rx="24" fill="url(#bg)"/><rect width="960" height="640" rx="24" fill="url(#grid)"/>
-<text x="28" y="40" font-size="17" fill="#91b6ff" font-weight="750" text-anchor="start">FLOWRUNTIME  /  04</text>
-<text x="28" y="85" font-size="34" fill="#eef4ff" font-weight="800" text-anchor="start">코드는 이 순서로 읽기</text>
-<text x="28" y="121" font-size="21" fill="#b5c5dd" font-weight="500" text-anchor="start">찾기 → 표시 → 회수 → 재사용</text>
-<rect x="28" y="160" width="284" height="122" rx="18" fill="#1b293b" stroke="#465977"/>
-<rect x="28" y="178" width="4" height="86" rx="2" fill="#91b6ff"/>
-<text x="48" y="195" font-size="24" fill="#91b6ff" font-weight="750" text-anchor="start">1 · Root 수집</text>
-<text x="48" y="228" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">남겨야 할 시작점</text>
-<text x="48" y="255" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">diagnostics.rs · root_map()</text>
-<rect x="338" y="160" width="284" height="122" rx="18" fill="#1b293b" stroke="#465977"/>
-<rect x="338" y="178" width="4" height="86" rx="2" fill="#73dae4"/>
-<text x="358" y="195" font-size="24" fill="#73dae4" font-weight="750" text-anchor="start">2 · Mark</text>
-<text x="358" y="228" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">참조를 따라 생존 표시</text>
-<text x="358" y="255" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">gc.rs · collect()</text>
-<rect x="648" y="160" width="284" height="122" rx="18" fill="#1b293b" stroke="#465977"/>
-<rect x="648" y="178" width="4" height="86" rx="2" fill="#c7a7ff"/>
-<text x="668" y="195" font-size="24" fill="#c7a7ff" font-weight="750" text-anchor="start">3 · Sweep</text>
-<text x="668" y="228" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">표시 안 된 객체 회수</text>
-<text x="668" y="255" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">gc.rs → heap.rs</text>
-<text x="28" y="355" font-size="26" fill="#eef4ff" font-weight="750" text-anchor="start">슬롯은 재사용하고, 세대는 바꿉니다.</text>
-<rect x="28" y="390" width="390" height="112" rx="18" fill="#1b293b" stroke="#465977"/>
-<rect x="28" y="408" width="4" height="76" rx="2" fill="#ffbf87"/>
-<text x="48" y="425" font-size="24" fill="#ffbf87" font-weight="750" text-anchor="start">예시 · 슬롯 7 / 세대 1</text>
-<text x="48" y="458" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">기존 객체 · Handle 7:1</text>
-<path d="M428 446 L520 446" fill="none" stroke="#c7a7ff" stroke-width="2.5" />
-<path d="M511.22417438109625 450.79425538604204 L520 446 L511.22417438109625 441.20574461395796" fill="none" stroke="#c7a7ff" stroke-width="2.5"/>
-<text x="475" y="423" font-size="18" fill="#b5c5dd" font-weight="650" text-anchor="middle">회수</text>
-<rect x="534" y="390" width="398" height="112" rx="18" fill="#1b293b" stroke="#465977"/>
-<rect x="534" y="408" width="4" height="76" rx="2" fill="#83dbb3"/>
-<text x="554" y="425" font-size="24" fill="#83dbb3" font-weight="750" text-anchor="start">회수 후 · 슬롯 7 / 세대 2</text>
-<text x="554" y="458" font-size="20" fill="#b5c5dd" font-weight="500" text-anchor="start">새 객체 · Handle 7:2</text>
-<text x="28" y="550" font-size="23" fill="#ffbf87" font-weight="650" text-anchor="start">이전 7:1 조회 → 세대 불일치로 거부합니다.</text>
-<text x="28" y="592" font-size="21" fill="#b5c5dd" font-weight="500" text-anchor="start">빈 슬롯이 늘어도 WASM 메모리 크기는 그대로일 수 있습니다.</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400" role="img" aria-labelledby="title desc"><title id="title">Mark Sweep과 Generation</title><desc id="desc">Root 수집, Mark, Sweep 후 슬롯을 재사용합니다. 슬롯 7의 세대 1이 2로 증가하므로 예전 Handle 7:1은 거부됩니다.</desc><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#101a2c"/><stop offset="1" stop-color="#201d38"/></linearGradient><linearGradient id="accent"><stop stop-color="#82acff"/><stop offset=".5" stop-color="#5ed3e2"/><stop offset="1" stop-color="#ba99ff"/></linearGradient><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#82acff" stroke-opacity=".035"/></pattern><filter id="shadow" x="-20%" y="-30%" width="140%" height="170%"><feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="#000" flood-opacity=".07"/></filter></defs><style>text{font-family:'Segoe UI','Malgun Gothic','Apple SD Gothic Neo',sans-serif}.flow{animation:flow 1.8s linear infinite}.pulse{animation:pulse 3s ease-in-out infinite}@keyframes flow{to{stroke-dashoffset:-18}}@keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}@media(prefers-reduced-motion:reduce){.flow,.pulse{animation:none}}</style><rect width="1200" height="400" rx="24" fill="url(#bg)"/><rect width="1200" height="400" rx="24" fill="url(#grid)"/>
+<text x="44" y="55" font-size="10" fill="#82acff" font-weight="800" text-anchor="start" letter-spacing="1.7">FLOWRUNTIME / 04 / IMPLEMENTATION</text>
+<text x="44" y="126" font-size="32" fill="#f0f5ff" font-weight="800" text-anchor="start" letter-spacing="-0.8">찾고, 표시하고, 회수</text>
+<rect x="44" y="144" width="166" height="3" rx="1.5" fill="url(#accent)"/>
+<text x="44" y="182" font-size="15" fill="#a7b7cf" font-weight="500" text-anchor="start" letter-spacing="0">슬롯은 다시 사용합니다.</text>
+<text x="44" y="207" font-size="15" fill="#a7b7cf" font-weight="500" text-anchor="start" letter-spacing="0">Generation으로 이전 참조를 구분합니다.</text>
+<rect x="44" y="304" width="145.5" height="26" rx="13" fill="#1a273d" stroke="#354662"/>
+<circle cx="56" cy="317" r="3" fill="#ba99ff"/>
+<text x="67" y="321" font-size="10" fill="#ba99ff" font-weight="750" text-anchor="start" letter-spacing="0.6">SAFE RUST / ARENA</text>
+<rect x="434" y="70" width="222" height="110" rx="14" fill="#1a273d" stroke="#354662" filter="url(#shadow)"/>
+<circle cx="452" cy="91" r="3" fill="#82acff"/>
+<text x="464" y="96" font-size="17" fill="#82acff" font-weight="750" text-anchor="start" letter-spacing="0">Root</text>
+<text x="452" y="123" font-size="13" fill="#a7b7cf" font-weight="500" text-anchor="start" letter-spacing="0">보존할 시작점</text>
+<text x="452" y="144" font-size="13" fill="#a7b7cf" font-weight="500" text-anchor="start" letter-spacing="0">root_map()</text>
+<path d="M659 123 L666 123" fill="none" stroke="#82acff" stroke-opacity=".18" stroke-width="1.5"/><path d="M659 123 L666 123" fill="none" stroke="#82acff" stroke-width="1.5" stroke-dasharray="3 6" class="flow"/>
+<path d="M660.884852867643 126.13612337358396 L666 123 L660.884852867643 119.86387662641604" fill="none" stroke="#82acff" stroke-width="1.5"/>
+<rect x="671" y="70" width="222" height="110" rx="14" fill="#1a273d" stroke="#354662" filter="url(#shadow)"/>
+<circle cx="689" cy="91" r="3" fill="#5ed3e2"/>
+<text x="701" y="96" font-size="17" fill="#5ed3e2" font-weight="750" text-anchor="start" letter-spacing="0">Mark</text>
+<text x="689" y="123" font-size="13" fill="#a7b7cf" font-weight="500" text-anchor="start" letter-spacing="0">참조를 따라 표시</text>
+<text x="689" y="144" font-size="13" fill="#a7b7cf" font-weight="500" text-anchor="start" letter-spacing="0">collect()</text>
+<path d="M896 123 L903 123" fill="none" stroke="#5ed3e2" stroke-opacity=".18" stroke-width="1.5"/><path d="M896 123 L903 123" fill="none" stroke="#5ed3e2" stroke-width="1.5" stroke-dasharray="3 6" class="flow"/>
+<path d="M897.884852867643 126.13612337358396 L903 123 L897.884852867643 119.86387662641604" fill="none" stroke="#5ed3e2" stroke-width="1.5"/>
+<rect x="908" y="70" width="222" height="110" rx="14" fill="#1a273d" stroke="#354662" filter="url(#shadow)"/>
+<circle cx="926" cy="91" r="3" fill="#ba99ff"/>
+<text x="938" y="96" font-size="17" fill="#ba99ff" font-weight="750" text-anchor="start" letter-spacing="0">Sweep</text>
+<text x="926" y="123" font-size="13" fill="#a7b7cf" font-weight="500" text-anchor="start" letter-spacing="0">표시 안 된 객체 회수</text>
+<text x="926" y="144" font-size="13" fill="#a7b7cf" font-weight="500" text-anchor="start" letter-spacing="0">release()</text>
+<rect x="434" y="224" width="696" height="112" rx="18" fill="#1a273d" stroke="#354662" filter="url(#shadow)"/>
+<text x="453" y="249" font-size="10" fill="#a7b7cf" font-weight="800" text-anchor="start" letter-spacing="1.2">SLOT 7 / GENERATION</text>
+<text x="453" y="292" font-size="28" fill="#eab975" font-weight="800" text-anchor="start" letter-spacing="0">7:1</text>
+<text x="520" y="289" font-size="13" fill="#a7b7cf" font-weight="500" text-anchor="start" letter-spacing="0">기존 객체</text>
+<path d="M626 282 L793 282" fill="none" stroke="#ba99ff" stroke-opacity=".18" stroke-width="1.5"/><path d="M626 282 L793 282" fill="none" stroke="#ba99ff" stroke-width="1.5" stroke-dasharray="3 6" class="flow"/>
+<path d="M787.884852867643 285.1361233735839 L793 282 L787.884852867643 278.8638766264161" fill="none" stroke="#ba99ff" stroke-width="1.5"/>
+<text x="710" y="267" font-size="11" fill="#a7b7cf" font-weight="500" text-anchor="middle" letter-spacing="0">회수 → 세대 증가</text>
+<text x="827" y="292" font-size="28" fill="#65d6b0" font-weight="800" text-anchor="start" letter-spacing="0">7:2</text>
+<text x="895" y="289" font-size="13" fill="#a7b7cf" font-weight="500" text-anchor="start" letter-spacing="0">새 객체</text>
+<text x="1108" y="316" font-size="11" fill="#eab975" font-weight="650" text-anchor="end" letter-spacing="0">이전 7:1 조회는 거부</text>
+<text x="434" y="369" font-size="12" fill="#a7b7cf" font-weight="500" text-anchor="start" letter-spacing="0">빈 슬롯이 늘어도 WASM 선형 메모리 크기는 그대로일 수 있습니다.</text>
 </svg>
