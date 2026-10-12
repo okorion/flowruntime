@@ -16,10 +16,12 @@
   <source media="(prefers-color-scheme: dark) and (max-width: 600px)" srcset="docs/diagrams/overview-mobile-dark.svg" />
   <source media="(max-width: 600px)" srcset="docs/diagrams/overview-mobile-light.svg" />
   <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/overview-dark.svg" />
-  <img alt="작업 정의에서 실행과 결과로, 작업 공간에서 GC와 빈자리 재사용으로 이어지는 개념도" src="docs/diagrams/overview-light.svg" width="100%" />
+  <img alt="주문 분류 Workflow와 Task 처리·JSON 결과, Root 참조 그래프와 같은 Heap 슬롯의 GC 전후를 보여주는 개념도" src="docs/diagrams/overview-light.svg" width="100%" />
 </picture>
 
 그림에서 **위쪽은 결과를 만드는 과정**, **아래쪽은 실행에 쓴 작업 공간을 정리하는 과정**입니다. GC(Garbage Collection)는 보존할 시작점에서 더 이상 닿지 않는 객체를 회수합니다. 완료 기록은 별도로 보관하므로 객체를 회수한 뒤에도 결과를 확인할 수 있습니다.
+
+화면은 주요 단계를 간략화한 모형이며, 객체 그래프는 주요 참조만 표시합니다. 슬롯 배치는 설명용 예시입니다. `index:generation` 표기에서 회수된 슬롯 3은 `3:1 → 3:2`가 되어 이전 Handle과 구분됩니다.
 
 > 예를 들어 주문 금액이 1,250이면 검토 대상으로, 300이면 승인 대상으로 분류합니다. 실행을 반복하면 객체가 생기고, 보존 조건이 끝난 객체는 GC가 회수하여 다음 실행에 쓸 자리를 만듭니다.
 
