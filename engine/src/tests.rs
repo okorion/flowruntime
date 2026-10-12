@@ -1,5 +1,57 @@
 use super::*;
 
+#[test]
+fn collector_handles_multiple_roots_shared_values_duplicate_and_invalid_edges() {
+    let mut engine = loaded(0);
+    engine.auto_gc = false;
+    let first = start(&mut engine, json!({"shared":"value"}));
+    let second = start(&mut engine, json!({"other":true}));
+    tick(&mut engine, 0);
+    let first_handle: Handle = serde_json::from_value(first["handle"].clone()).unwrap();
+    let second_handle: Handle = serde_json::from_value(second["handle"].clone()).unwrap();
+    let shared = match engine.heap.get(first_handle).unwrap() {
+        Object::Run(run) => run.initial,
+        _ => panic!("expected Run"),
+    };
+    // Deliberately malformed internal edges exercise the collector's defensive
+    // traversal; the public workflow API never creates these invalid references.
+    if let Some(Object::Run(run)) = engine.heap.get_mut(first_handle) {
+        run.tasks.push(run.tasks[0]);
+        run.tasks.push(Handle {
+            index: u32::MAX,
+            generation: 1,
+        });
+    }
+    if let Some(Object::Run(run)) = engine.heap.get_mut(second_handle) {
+        run.initial = shared;
+        run.result = Some(shared);
+    }
+    let roots = engine.root_map();
+    assert_eq!(roots.len(), 2);
+    let expected = engine.heap.reachable(roots.keys().copied()).len();
+    assert_eq!(engine.collect().marked, expected);
+    assert!(engine.heap.get(shared).is_some());
+    engine.retained.remove(&first["id"].as_u64().unwrap());
+    engine.collect();
+    assert!(engine.heap.get(first_handle).is_none());
+    assert!(engine.heap.get(shared).is_some());
+    engine.retained.clear();
+    engine.collect();
+    assert_eq!(engine.heap.live, 0);
+    assert_eq!(engine.heap.free.len(), engine.heap.slots.len());
+    assert_eq!(
+        engine.heap.free.iter().collect::<BTreeSet<_>>().len(),
+        engine.heap.free.len()
+    );
+    let generation = engine.heap.slots[shared.index as usize].generation;
+    engine.heap.release(shared.index as usize);
+    assert_eq!(
+        engine.heap.slots[shared.index as usize].generation,
+        generation
+    );
+    assert_eq!(engine.collect().reclaimed, 0);
+}
+
 fn node(id: &str, kind: &str, config: Value) -> WorkflowNode {
     WorkflowNode {
         id: id.into(),
