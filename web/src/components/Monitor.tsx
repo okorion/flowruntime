@@ -1,8 +1,22 @@
-import { useEffect, useState } from 'react';
-import type { EngineClient } from '../engine';
-import type { EngineState, Handle, RunDetail, RunSummary, TaskView } from '../types';
-import { Badge, duration, Empty, handleId, Icon, JsonBlock, number } from './ui';
-import { WorkflowCanvas } from './Studio';
+import { useEffect, useState } from "react";
+import type { EngineClient } from "../engine";
+import type {
+  EngineState,
+  Handle,
+  RunDetail,
+  RunSummary,
+  TaskView,
+} from "../types";
+import {
+  Badge,
+  duration,
+  Empty,
+  handleId,
+  Icon,
+  JsonBlock,
+  number,
+} from "./ui";
+import { WorkflowCanvas } from "./Studio";
 
 interface MonitorProps {
   engine: EngineClient;
@@ -14,38 +28,466 @@ interface MonitorProps {
   onRun: () => void;
 }
 
-export function Monitor({ engine, state, selectedRun, onSelect, onTrace, onCommand, onRun }: MonitorProps) {
+export function Monitor({
+  engine,
+  state,
+  selectedRun,
+  onSelect,
+  onTrace,
+  onCommand,
+  onRun,
+}: MonitorProps) {
   const [detail, setDetail] = useState<RunDetail | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
-  const [view, setView] = useState<'timeline' | 'workflow'>('timeline');
-  const [filter, setFilter] = useState('all');
+  const [view, setView] = useState<"timeline" | "workflow">("timeline");
+  const [filter, setFilter] = useState("all");
   const [selectedTask, setSelectedTask] = useState<string | null>(null);
   useEffect(() => {
-    if (selectedRun == null) { setDetail(null); return; }
-    try { setDetail(engine.request<RunDetail>({ op: 'run', run_id: selectedRun })); setDetailError(null); }
-    catch (error) { setDetail(null); setDetailError(error instanceof Error ? error.message : String(error)); }
+    if (selectedRun == null) {
+      setDetail(null);
+      return;
+    }
+    try {
+      setDetail(engine.request<RunDetail>({ op: "run", run_id: selectedRun }));
+      setDetailError(null);
+    } catch (error) {
+      setDetail(null);
+      setDetailError(error instanceof Error ? error.message : String(error));
+    }
   }, [engine, selectedRun, state]);
-  useEffect(() => { setSelectedTask(null); }, [selectedRun]);
-  const runs = [...state.runs].sort((a, b) => b.id - a.id).filter(run => filter === 'all' || run.status === filter);
-  const task = detail?.tasks.find(item => item.node_id === selectedTask);
-  return <div className="monitor-layout">
-    <aside className="run-list-panel"><div className="run-list-heading"><div><h2>Executions</h2><span>{number(state.runs.length)} recent runs</span></div><Icon name="activity" size={20}/></div><div className="run-filter"><label className="sr-only" htmlFor="run-status-filter">Filter runs</label><select id="run-status-filter" value={filter} onChange={event => setFilter(event.target.value)}><option value="all">All statuses</option><option value="running">Running</option><option value="waiting">Waiting</option><option value="completed">Completed</option><option value="failed">Failed</option><option value="cancelled">Cancelled</option></select><span>{runs.length}</span></div><div className="run-list">{runs.length ? runs.map(run => <RunListItem key={run.id} run={run} selected={selectedRun === run.id} onSelect={() => onSelect(run.id)}/>) : <div className="run-list-empty">{filter === 'all' ? 'Your executions will appear here.' : 'No executions with this status.'}</div>}</div><div className="run-list-footer"><Icon name="info" size={13}/>History is bounded to {state.limits.history_limit} runs.</div></aside>
-    <section className="execution-detail">
-      {!detail ? <Empty icon="activity" title={detailError ? 'Execution no longer available' : 'Your next execution starts here'} action={<button className="button button-primary" onClick={onRun}><Icon name="play" size={15}/>Run workflow</button>}>{detailError ?? 'Run your workflow to follow each task, inspect the result, and trace its runtime objects.'}</Empty> : <>
-        <div className="execution-heading"><div><div className="eyebrow">EXECUTION DETAILS</div><h2>{detail.name} <span>#{String(detail.id).padStart(4, '0')}</span></h2><div className="execution-subline"><Badge tone={detail.status}>{detail.status}</Badge><span>{duration((detail.completed_at ?? state.now_ms) - detail.started_at)}</span><span className="dot-separator">·</span><span>{detail.tasks.length} tasks</span></div></div><div className="execution-actions"><button className={`button button-small ${detail.pinned ? 'button-pinned' : ''}`} disabled={detail.collected} onClick={() => onCommand({ op: 'pin', run_id: detail.id, pinned: !detail.pinned })} aria-label={detail.pinned ? 'Unpin run' : 'Pin run'}><Icon name="pin" size={14}/>{detail.pinned ? 'Pinned' : 'Pin run'}</button><button className="button button-small" onClick={() => onTrace(detail.handle, detail.id)}><Icon name="search" size={14}/>Trace run</button>{(detail.status === 'running' || detail.status === 'waiting') && <button className="button button-small danger-hover" onClick={() => onCommand({ op: 'cancel', run_id: detail.id })}><Icon name="stop" size={14}/>Cancel run</button>}</div></div>
-        <div className="execution-metadata"><div><span>STARTED AT</span><strong>{duration(detail.started_at)} <small>virtual</small></strong></div><div><span>RUN HANDLE</span><code>{handleId(detail.handle)}</code></div><div><span>OBJECT LIFETIME</span><strong>{detail.pinned ? 'Pinned root' : detail.collected ? 'Collected' : detail.retained ? 'Retention window' : 'Released from roots'}</strong></div><div><span>WORKFLOW SNAPSHOT</span><strong>{detail.workflow.nodes.length} nodes · {detail.workflow.edges.length} edges</strong></div></div>
-        {detail.error && <div className="execution-error" role="alert"><Icon name="info" size={18}/><div><strong>Execution failed</strong><p>{detail.error}</p></div></div>}
-        <div className="detail-tabs"><button className={view === 'timeline' ? 'active' : ''} onClick={() => setView('timeline')}><Icon name="activity" size={15}/>Task timeline</button><button className={view === 'workflow' ? 'active' : ''} onClick={() => setView('workflow')}><Icon name="workflow" size={15}/>Workflow snapshot</button></div>
-        {view === 'workflow' ? <div className="snapshot-view"><div className="snapshot-note"><Icon name="info" size={14}/>The definition captured when this run started. Subsequent edits apply to new runs.</div><div className="snapshot-canvas"><WorkflowCanvas workflow={detail.workflow} readOnly statuses={Object.fromEntries(detail.tasks.map(item => [item.node_id, item.status]))}/></div></div> : <div className="execution-content"><section className="timeline-panel"><div className="panel-title"><h3>Task timeline</h3><span>Virtual execution order</span></div><div className="timeline" data-testid="task-timeline">{detail.tasks.map((item, index) => <TaskRow key={`${index}-${item.node_id}`} task={item} index={index} now={state.now_ms} runStart={detail.started_at} selected={selectedTask === item.node_id} onSelect={() => setSelectedTask(item.node_id)} onTrace={() => onTrace(item.handle, detail.id)}/>)}</div>{detail.status === 'waiting' && <div className="waiting-note"><Icon name="clock" size={17}/><span>A continuation is waiting in the scheduler. {state.paused ? 'Resume or step to advance virtual time.' : 'The next task resumes when its delay expires.'}</span></div>}</section><aside className="result-panel">{task ? <><div className="panel-title"><h3>{task.label}</h3><button className="icon-button" aria-label="Show run result" onClick={() => setSelectedTask(null)}><Icon name="close" size={14}/></button></div><Badge tone={task.status}>{task.status}</Badge><div className="task-handle">Task handle <code>{handleId(task.handle)}</code></div><JsonBlock title="TASK INPUT" value={task.input}/><JsonBlock title="TASK OUTPUT" value={task.output}/>{task.error && <p className="field-error">{task.error}</p>}<button className="button button-small" onClick={() => onTrace(task.handle, detail.id)}><Icon name="search" size={14}/>Trace selected task</button></> : <><div className="panel-title"><h3>Execution result</h3><span className="code-tag">JSON</span></div><div data-testid="run-result"><JsonBlock value={detail.result}/></div>{detail.result === null && <p className="field-help">{detail.status === 'failed' ? 'The run stopped before producing a result.' : detail.status === 'cancelled' ? 'This execution was cancelled.' : 'The final output will appear when the run completes.'}</p>}<div className="result-footnote"><Icon name="check" size={14}/><span>Produced by the Rust/WASM runtime</span></div><div className="run-inspection-help"><Icon name="layers" size={19}/><h4>Follow the objects</h4><p>Trace this run to see its tasks, values, and strong references in Developer Tools.</p><button className="text-button" onClick={() => onTrace(detail.handle, detail.id)}>Explore references<Icon name="arrow" size={14}/></button></div></>}</aside></div>}
-      </>}
-    </section>
-  </div>;
+  useEffect(() => {
+    setSelectedTask(null);
+  }, [selectedRun]);
+  const runs = [...state.runs]
+    .sort((a, b) => b.id - a.id)
+    .filter((run) => filter === "all" || run.status === filter);
+  const task = detail?.tasks.find((item) => item.node_id === selectedTask);
+  return (
+    <div className="monitor-layout">
+      <aside className="run-list-panel">
+        <div className="run-list-heading">
+          <div>
+            <h2>Executions</h2>
+            <span>{number(state.runs.length)} recent runs</span>
+          </div>
+          <Icon name="activity" size={20} />
+        </div>
+        <div className="run-filter">
+          <label className="sr-only" htmlFor="run-status-filter">
+            Filter runs
+          </label>
+          <select
+            id="run-status-filter"
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+          >
+            <option value="all">All statuses</option>
+            <option value="running">Running</option>
+            <option value="waiting">Waiting</option>
+            <option value="completed">Completed</option>
+            <option value="failed">Failed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <span>{runs.length}</span>
+        </div>
+        <div className="run-list">
+          {runs.length ? (
+            runs.map((run) => (
+              <RunListItem
+                key={run.id}
+                run={run}
+                selected={selectedRun === run.id}
+                onSelect={() => onSelect(run.id)}
+              />
+            ))
+          ) : (
+            <div className="run-list-empty">
+              {filter === "all"
+                ? "Your executions will appear here."
+                : "No executions with this status."}
+            </div>
+          )}
+        </div>
+        <div className="run-list-footer">
+          <Icon name="info" size={13} />
+          History is bounded to {state.limits.history_limit} runs.
+        </div>
+      </aside>
+      <section className="execution-detail">
+        {!detail ? (
+          <Empty
+            icon="activity"
+            title={
+              detailError
+                ? "Execution no longer available"
+                : "Your next execution starts here"
+            }
+            action={
+              <button className="button button-primary" onClick={onRun}>
+                <Icon name="play" size={15} />
+                Run workflow
+              </button>
+            }
+          >
+            {detailError ??
+              "Run your workflow to follow each task, inspect the result, and trace its runtime objects."}
+          </Empty>
+        ) : (
+          <>
+            <div className="execution-heading">
+              <div>
+                <div className="eyebrow">EXECUTION DETAILS</div>
+                <h2>
+                  {detail.name}{" "}
+                  <span>#{String(detail.id).padStart(4, "0")}</span>
+                </h2>
+                <div className="execution-subline">
+                  <Badge tone={detail.status}>{detail.status}</Badge>
+                  <span>
+                    {duration(
+                      (detail.completed_at ?? state.now_ms) - detail.started_at,
+                    )}
+                  </span>
+                  <span className="dot-separator">·</span>
+                  <span>{detail.tasks.length} tasks</span>
+                </div>
+              </div>
+              <div className="execution-actions">
+                <button
+                  className={`button button-small ${detail.pinned ? "button-pinned" : ""}`}
+                  disabled={detail.collected}
+                  onClick={() =>
+                    onCommand({
+                      op: "pin",
+                      run_id: detail.id,
+                      pinned: !detail.pinned,
+                    })
+                  }
+                  aria-label={detail.pinned ? "Unpin run" : "Pin run"}
+                >
+                  <Icon name="pin" size={14} />
+                  {detail.pinned ? "Pinned" : "Pin run"}
+                </button>
+                <button
+                  className="button button-small"
+                  onClick={() => onTrace(detail.handle, detail.id)}
+                >
+                  <Icon name="search" size={14} />
+                  Trace run
+                </button>
+                {(detail.status === "running" ||
+                  detail.status === "waiting") && (
+                  <button
+                    className="button button-small danger-hover"
+                    onClick={() =>
+                      onCommand({ op: "cancel", run_id: detail.id })
+                    }
+                  >
+                    <Icon name="stop" size={14} />
+                    Cancel run
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="execution-metadata">
+              <div>
+                <span>STARTED AT</span>
+                <strong>
+                  {duration(detail.started_at)} <small>virtual</small>
+                </strong>
+              </div>
+              <div>
+                <span>RUN HANDLE</span>
+                <code>{handleId(detail.handle)}</code>
+              </div>
+              <div>
+                <span>OBJECT LIFETIME</span>
+                <strong>
+                  {detail.pinned
+                    ? "Pinned root"
+                    : detail.collected
+                      ? "Collected"
+                      : detail.retained
+                        ? "Retention window"
+                        : "Released from roots"}
+                </strong>
+              </div>
+              <div>
+                <span>WORKFLOW SNAPSHOT</span>
+                <strong>
+                  {detail.workflow.nodes.length} nodes ·{" "}
+                  {detail.workflow.edges.length} edges
+                </strong>
+              </div>
+            </div>
+            {detail.error && (
+              <div className="execution-error" role="alert">
+                <Icon name="info" size={18} />
+                <div>
+                  <strong>Execution failed</strong>
+                  <p>{detail.error}</p>
+                </div>
+              </div>
+            )}
+            <div className="detail-tabs">
+              <button
+                className={view === "timeline" ? "active" : ""}
+                onClick={() => setView("timeline")}
+              >
+                <Icon name="activity" size={15} />
+                Task timeline
+              </button>
+              <button
+                className={view === "workflow" ? "active" : ""}
+                onClick={() => setView("workflow")}
+              >
+                <Icon name="workflow" size={15} />
+                Workflow snapshot
+              </button>
+            </div>
+            {view === "workflow" ? (
+              <div className="snapshot-view">
+                <div className="snapshot-note">
+                  <Icon name="info" size={14} />
+                  The definition captured when this run started. Subsequent
+                  edits apply to new runs.
+                </div>
+                <div className="snapshot-canvas">
+                  <WorkflowCanvas
+                    workflow={detail.workflow}
+                    readOnly
+                    statuses={Object.fromEntries(
+                      detail.tasks.map((item) => [item.node_id, item.status]),
+                    )}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="execution-content">
+                <section className="timeline-panel">
+                  <div className="panel-title">
+                    <h3>Task timeline</h3>
+                    <span>Virtual execution order</span>
+                  </div>
+                  <div className="timeline" data-testid="task-timeline">
+                    {detail.tasks.map((item, index) => (
+                      <TaskRow
+                        key={`${index}-${item.node_id}`}
+                        task={item}
+                        index={index}
+                        now={state.now_ms}
+                        runStart={detail.started_at}
+                        selected={selectedTask === item.node_id}
+                        onSelect={() => setSelectedTask(item.node_id)}
+                        onTrace={() => onTrace(item.handle, detail.id)}
+                      />
+                    ))}
+                  </div>
+                  {detail.status === "waiting" && (
+                    <div className="waiting-note">
+                      <Icon name="clock" size={17} />
+                      <span>
+                        A continuation is waiting in the scheduler.{" "}
+                        {state.paused
+                          ? "Resume or step to advance virtual time."
+                          : "The next task resumes when its delay expires."}
+                      </span>
+                    </div>
+                  )}
+                </section>
+                <aside className="result-panel">
+                  {task ? (
+                    <>
+                      <div className="panel-title">
+                        <h3>{task.label}</h3>
+                        <button
+                          className="icon-button"
+                          aria-label="Show run result"
+                          onClick={() => setSelectedTask(null)}
+                        >
+                          <Icon name="close" size={14} />
+                        </button>
+                      </div>
+                      <Badge tone={task.status}>{task.status}</Badge>
+                      <div className="task-handle">
+                        Task handle <code>{handleId(task.handle)}</code>
+                      </div>
+                      <JsonBlock title="TASK INPUT" value={task.input} />
+                      <JsonBlock title="TASK OUTPUT" value={task.output} />
+                      {task.error && (
+                        <p className="field-error">{task.error}</p>
+                      )}
+                      <button
+                        className="button button-small"
+                        onClick={() => onTrace(task.handle, detail.id)}
+                      >
+                        <Icon name="search" size={14} />
+                        Trace selected task
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="panel-title">
+                        <h3>Execution result</h3>
+                        <span className="code-tag">JSON</span>
+                      </div>
+                      <div data-testid="run-result">
+                        <JsonBlock value={detail.result} />
+                      </div>
+                      {detail.result === null && (
+                        <p className="field-help">
+                          {detail.status === "failed"
+                            ? "The run stopped before producing a result."
+                            : detail.status === "cancelled"
+                              ? "This execution was cancelled."
+                              : "The final output will appear when the run completes."}
+                        </p>
+                      )}
+                      <div className="result-footnote">
+                        <Icon name="check" size={14} />
+                        <span>Produced by the Rust/WASM runtime</span>
+                      </div>
+                      <div className="run-inspection-help">
+                        <Icon name="layers" size={19} />
+                        <h4>Follow the objects</h4>
+                        <p>
+                          Trace this run to see its tasks, values, and strong
+                          references in Developer Tools.
+                        </p>
+                        <button
+                          className="text-button"
+                          onClick={() => onTrace(detail.handle, detail.id)}
+                        >
+                          Explore references
+                          <Icon name="arrow" size={14} />
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </aside>
+              </div>
+            )}
+          </>
+        )}
+      </section>
+    </div>
+  );
 }
 
-function RunListItem({ run, selected, onSelect }: { run: RunSummary; selected: boolean; onSelect: () => void }) {
-  return <button className={`run-item ${selected ? 'selected' : ''}`} onClick={onSelect} aria-label={`Run #${run.id}`}><div className="run-item-top"><span className={`run-status-icon status-${run.status}`}><Icon name={run.status === 'completed' ? 'check' : run.status === 'waiting' ? 'clock' : run.status === 'failed' ? 'close' : run.status === 'cancelled' ? 'stop' : 'activity'} size={14}/></span><strong>{run.name}</strong>{run.pinned && <Icon name="pin" size={12}/>}<span className="run-id">#{String(run.id).padStart(4, '0')}</span></div><div className="run-item-bottom"><span>{run.status}</span><span>{duration(run.started_at)} <span className="dot-separator">·</span>{run.task_count} tasks</span></div></button>;
+function RunListItem({
+  run,
+  selected,
+  onSelect,
+}: {
+  run: RunSummary;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      className={`run-item ${selected ? "selected" : ""}`}
+      onClick={onSelect}
+      aria-label={`Run #${run.id}`}
+    >
+      <div className="run-item-top">
+        <span className={`run-status-icon status-${run.status}`}>
+          <Icon
+            name={
+              run.status === "completed"
+                ? "check"
+                : run.status === "waiting"
+                  ? "clock"
+                  : run.status === "failed"
+                    ? "close"
+                    : run.status === "cancelled"
+                      ? "stop"
+                      : "activity"
+            }
+            size={14}
+          />
+        </span>
+        <strong>{run.name}</strong>
+        {run.pinned && <Icon name="pin" size={12} />}
+        <span className="run-id">#{String(run.id).padStart(4, "0")}</span>
+      </div>
+      <div className="run-item-bottom">
+        <span>{run.status}</span>
+        <span>
+          {duration(run.started_at)} <span className="dot-separator">·</span>
+          {run.task_count} tasks
+        </span>
+      </div>
+    </button>
+  );
 }
 
-function TaskRow({ task, index, now, runStart, selected, onSelect, onTrace }: { task: TaskView; index: number; now: number; runStart: number; selected: boolean; onSelect: () => void; onTrace: () => void }) {
-  return <div className={`timeline-row ${selected ? 'selected' : ''}`}><div className="timeline-track"><span className={`timeline-dot status-${task.status}`}><Icon name={task.status === 'completed' ? 'check' : task.status === 'waiting' ? 'clock' : task.status === 'failed' ? 'close' : 'activity'} size={13}/></span><span className="timeline-line"/></div><button className="timeline-task" onClick={onSelect}><div className="timeline-task-top"><strong>{task.label}</strong><span>{duration((task.completed_at ?? now) - task.started_at)}</span></div><div className="timeline-task-bottom"><span>{String(index + 1).padStart(2, '0')} <span className="dot-separator">·</span>{task.kind}</span><span className={`status-text status-${task.status}`}>{task.status}</span></div><div className="timeline-time">+{duration(task.started_at - runStart)}{task.completed_at != null ? ` → +${duration(task.completed_at - runStart)}` : ' → pending'}</div>{task.error && <p className="field-error">{task.error}</p>}</button><button className="icon-button timeline-trace" aria-label={`Trace task ${task.label}`} title="Trace task object" onClick={onTrace}><Icon name="search" size={14}/></button></div>;
+function TaskRow({
+  task,
+  index,
+  now,
+  runStart,
+  selected,
+  onSelect,
+  onTrace,
+}: {
+  task: TaskView;
+  index: number;
+  now: number;
+  runStart: number;
+  selected: boolean;
+  onSelect: () => void;
+  onTrace: () => void;
+}) {
+  return (
+    <div className={`timeline-row ${selected ? "selected" : ""}`}>
+      <div className="timeline-track">
+        <span className={`timeline-dot status-${task.status}`}>
+          <Icon
+            name={
+              task.status === "completed"
+                ? "check"
+                : task.status === "waiting"
+                  ? "clock"
+                  : task.status === "failed"
+                    ? "close"
+                    : "activity"
+            }
+            size={13}
+          />
+        </span>
+        <span className="timeline-line" />
+      </div>
+      <button className="timeline-task" onClick={onSelect}>
+        <div className="timeline-task-top">
+          <strong>{task.label}</strong>
+          <span>{duration((task.completed_at ?? now) - task.started_at)}</span>
+        </div>
+        <div className="timeline-task-bottom">
+          <span>
+            {String(index + 1).padStart(2, "0")}{" "}
+            <span className="dot-separator">·</span>
+            {task.kind}
+          </span>
+          <span className={`status-text status-${task.status}`}>
+            {task.status}
+          </span>
+        </div>
+        <div className="timeline-time">
+          +{duration(task.started_at - runStart)}
+          {task.completed_at != null
+            ? ` → +${duration(task.completed_at - runStart)}`
+            : " → pending"}
+        </div>
+        {task.error && <p className="field-error">{task.error}</p>}
+      </button>
+      <button
+        className="icon-button timeline-trace"
+        aria-label={`Trace task ${task.label}`}
+        title="Trace task object"
+        onClick={onTrace}
+      >
+        <Icon name="search" size={14} />
+      </button>
+    </div>
+  );
 }
